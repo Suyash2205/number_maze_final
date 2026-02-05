@@ -67,7 +67,7 @@ body {
 }
 
 .timer-chip {
-  padding: 8px 16px;
+  padding: 6px 12px;
   border-radius: 999px;
   background: linear-gradient(135deg, #2b3d8f, #1a2a6c);
   border: 1px solid rgba(110, 130, 255, 0.6);
@@ -79,16 +79,10 @@ body {
 
 .timer-stack {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 6px;
-}
-
-.debug-line {
-  font-size: 0.7rem;
-  letter-spacing: 0.08em;
-  color: rgba(170, 190, 255, 0.75);
-  text-transform: uppercase;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 .game-stage {
@@ -165,10 +159,13 @@ body {
 
 .maze-cell.is-current {
   border-color: rgba(140, 190, 255, 0.95);
-  box-shadow: 0 0 0 2px rgba(120, 170, 255, 0.45),
-    0 0 14px rgba(120, 170, 255, 0.35);
+  box-shadow:
+    0 0 0 2px rgba(120, 170, 255, 0.45),
+    0 0 14px rgba(120, 170, 255, 0.35),
+    inset 0 0 18px rgba(120, 170, 255, 0.12); /* ⬅ added */
   outline: 1px dashed rgba(140, 190, 255, 0.6);
 }
+
 
 .maze-cell.is-visited::after {
   content: "";
@@ -233,19 +230,21 @@ body {
 
 .maze-question {
   font-weight: 700;
-  font-size: 0.9rem;
-  letter-spacing: 0.08em;
+  font-size: 1.2rem;        /* ⬅ increase from 0.9rem */
+  letter-spacing: 0.05em;  /* ⬅ reduce spacing slightly */
   text-transform: uppercase;
   color: #f7f6ff;
   text-shadow: 0 2px 6px rgba(8, 10, 24, 0.6);
 }
 
-.maze-cell-labels {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  outline: 1px dashed rgba(255, 200, 120, 0.4);
+.maze-cell-label {
+  font-size: clamp(0.95rem, 1.8vw, 1.1rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  pointer-events: auto; /* ⬅ VERY IMPORTANT */
 }
+
 
 .maze-cell-label {
   position: absolute;

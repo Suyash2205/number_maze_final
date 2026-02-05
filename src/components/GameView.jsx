@@ -39,11 +39,6 @@ const loadHighScore = () => {
 };
 
 export default function GameView({ onBackToHome, onPlayAgain }) {
-  const [debugInfo, setDebugInfo] = useState({
-    currentCellId: "—",
-    isMoving: false,
-    lastMoveType: "none",
-  });
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [isTimerRunning, setIsTimerRunning] = useState(true);
   const [recordSeconds, setRecordSeconds] = useState(loadRecord);
@@ -166,7 +161,6 @@ export default function GameView({ onBackToHome, onPlayAgain }) {
     <GameShell
       topBar={
         <TopBar
-          debugInfo={debugInfo}
           timeDisplay={timeDisplay}
           recordDisplay={recordDisplay}
           score={finalScore != null ? finalScore : score}
@@ -174,7 +168,6 @@ export default function GameView({ onBackToHome, onPlayAgain }) {
       }
       mainContent={
         <MazeViewport
-          onDebugChange={setDebugInfo}
           onReachExit={handleReachExit}
           onAnswer={handleAnswer}
           elapsedSeconds={elapsedSeconds}

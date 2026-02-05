@@ -1,4 +1,4 @@
-export default function TopBar({ debugInfo, timeDisplay, recordDisplay, score = 0 }) {
+export default function TopBar({ timeDisplay, recordDisplay, score = 0 }) {
   return (
     <div className="topbar-content">
       <div className="game-title">
@@ -17,10 +17,6 @@ export default function TopBar({ debugInfo, timeDisplay, recordDisplay, score = 
             Best: {recordDisplay}
           </div>
         ) : null}
-        <div className="debug-line" aria-live="polite">
-          {debugInfo.currentCellId} · moving: {String(debugInfo.isMoving)} · last:{" "}
-          {debugInfo.lastMoveType}
-        </div>
       </div>
     </div>
   );

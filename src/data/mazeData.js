@@ -302,9 +302,19 @@ const generateMazeOnce = (exitCellId) => {
   };
 
   cells.forEach((cell) => {
+    // 1) Exit has NO outgoing edges
+    if (cell.id === exitCellId) return;
+  
     const neighbors = neighborCandidates(cell.x, cell.y, allDirections);
+  
     neighbors.forEach((candidate) => {
       const toId = cellId(candidate.x, candidate.y);
+  
+      // 2) Exit has ONLY ONE incoming edge: from the pre-exit solution cell
+      if (toId === exitCellId && solutionNextMap.get(cell.id) !== exitCellId) {
+        return;
+      }
+  
       addEdge({
         fromId: cell.id,
         toId,
@@ -312,7 +322,8 @@ const generateMazeOnce = (exitCellId) => {
       });
     });
   });
-
+  
+  
   const validateMaze = () => {
     const outgoingCounts = new Map();
     const incomingCounts = new Map();
@@ -381,6 +392,31 @@ const generateMazeOnce = (exitCellId) => {
           return false;
         }
       }
+      // ✅ Exit rules validation
+const exitOutgoing = outgoingCounts.get(exitCellId) || 0;
+if (exitOutgoing !== 0) {
+  console.error("Maze violation: Exit has outgoing edges");
+  return false;
+}
+
+const exitIncoming = incomingCounts.get(exitCellId) || 0;
+if (exitIncoming !== 1) {
+  console.error("Maze violation: Exit must have exactly 1 incoming edge, got:", exitIncoming);
+  return false;
+}
+
+const exitAllowedFromId = solutionPath[solutionPath.length - 2];
+const okExitEdge = paths.some(
+  (e) =>
+    e.fromCellId === exitAllowedFromId &&
+    e.toCellId === exitCellId &&
+    e.isCorrectEdge
+);
+if (!okExitEdge) {
+  console.error("Maze violation: Missing correct pre-exit -> exit edge");
+  return false;
+}
+
     }
     return true;
   };

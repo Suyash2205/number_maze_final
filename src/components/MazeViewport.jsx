@@ -97,7 +97,6 @@ const labelPositionClass = (direction) => {
 };
 
 export default function MazeViewport({
-  onDebugChange = () => {},
   onReachExit = () => {},
   onAnswer = () => {},
   elapsedSeconds = 0,
@@ -113,11 +112,13 @@ export default function MazeViewport({
 }) {
   const maze = useMemo(() => createMaze(), []);
   const { gridSize, cells, paths, startCellId, solutionPath, exitCellId } = maze;
+
   const cellMap = new Map(cells.map((cell) => [cell.id, cell]));
   const sortedCells = [...cells].sort((a, b) =>
     a.y === b.y ? a.x - b.x : a.y - b.y
   );
   const startCell = cellMap.get(startCellId);
+
   const [currentCellId, setCurrentCellId] = useState(startCellId);
   const [visitedCells, setVisitedCells] = useState(() => new Set([startCellId]));
   const [solvedCells, setSolvedCells] = useState(() => new Set());
@@ -129,14 +130,16 @@ export default function MazeViewport({
   const [hasEscaped, setHasEscaped] = useState(false);
   const [forcedDeadEnds, setForcedDeadEnds] = useState(() => new Set());
   const [solutionIndex, setSolutionIndex] = useState(0);
+
+  // ✅ NEW: proof-of-progress tracker (prevents backtracking unlock)
+  const [furthestCorrectIndex, setFurthestCorrectIndex] = useState(0);
+
   const moveTimeoutRef = useRef(null);
   const boardRef = useRef(null);
   const [boardSize, setBoardSize] = useState({ width: 0, height: 0 });
 
   useEffect(() => {
-    if (!boardRef.current) {
-      return;
-    }
+    if (!boardRef.current) return;
     const node = boardRef.current;
     const observer = new ResizeObserver(([entry]) => {
       const { width, height } = entry.contentRect;
@@ -145,10 +148,6 @@ export default function MazeViewport({
     observer.observe(node);
     return () => observer.disconnect();
   }, []);
-
-  useEffect(() => {
-    onDebugChange({ currentCellId, isMoving, lastMoveType });
-  }, [currentCellId, isMoving, lastMoveType, onDebugChange]);
 
   useEffect(() => {
     if (currentCellId === exitCellId && !hasEscaped) {
@@ -161,9 +160,7 @@ export default function MazeViewport({
 
   useEffect(() => {
     return () => {
-      if (moveTimeoutRef.current) {
-        clearTimeout(moveTimeoutRef.current);
-      }
+      if (moveTimeoutRef.current) clearTimeout(moveTimeoutRef.current);
     };
   }, []);
 
@@ -196,6 +193,8 @@ export default function MazeViewport({
         path.fromCellId,
         [...(outgoing.get(path.fromCellId) || []), key]
       );
+
+      // undirected adjacency
       adjacency.set(
         path.fromCellId,
         new Set([...(adjacency.get(path.fromCellId) || []), path.toCellId])
@@ -223,45 +222,74 @@ export default function MazeViewport({
     };
   }, [cells, paths, gridSize]);
 
-  const currentNeighbors = adjacencyMap.get(currentCellId) || new Set();
+  // ✅ EXIT UNLOCK RULE (earned progress + correct position)
+  const exitAllowedFromId = solutionPath[solutionPath.length - 2];
+  const requiredIndexForExit = solutionPath.length - 2;
+
+  const exitUnlocked =
+    currentCellId === exitAllowedFromId &&
+    furthestCorrectIndex >= requiredIndexForExit &&
+    solutionIndex === requiredIndexForExit;
+
+  const canRenderExitEdge = exitUnlocked;
+
+  const currentNeighborsRaw = adjacencyMap.get(currentCellId) || new Set();
+
+  // Hide Exit from neighbors unless unlocked
+  const currentNeighbors = useMemo(() => {
+    if (canRenderExitEdge) return currentNeighborsRaw;
+    return new Set(
+      [...currentNeighborsRaw].filter((cellId) => cellId !== exitCellId)
+    );
+  }, [canRenderExitEdge, currentNeighborsRaw, exitCellId]);
+
   const isVisited = (cellId) => visitedCells.has(cellId);
   const isSolved = (cellId) => solvedCells.has(cellId);
+
   const markSolved = (cellId) => {
     setSolvedCells((prev) => new Set([...prev, cellId]));
   };
   const markVisited = (cellId) => {
     setVisitedCells((prev) => new Set([...prev, cellId]));
   };
+
   const visibleSet = useMemo(
     () => new Set([currentCellId, ...currentNeighbors]),
     [currentCellId, currentNeighbors]
   );
   const isVisible = (cellId) => revealAll || visibleSet.has(cellId);
   const isRevealed = (cellId) => isVisible(cellId);
+
   const getOutgoingEdges = (cellId) =>
     (outgoingMap.get(cellId) || []).map((key) => pathMap.get(key));
+
   const canBacktrackTo = (cellId) =>
     cellId !== currentCellId && isVisited(cellId) && currentNeighbors.has(cellId);
 
-  const currentOutgoingEdges = getOutgoingEdges(currentCellId);
+  // ✅ STRICT filter: Exit edge exists only when unlocked AND correct
+  const isAllowedExitEdge = (edge) => {
+    if (edge.toCellId !== exitCellId) return true;
+    return exitUnlocked && edge.isCorrectEdge;
+  };
+
+  const currentOutgoingEdges = getOutgoingEdges(currentCellId).filter(isAllowedExitEdge);
+
   const fallbackEdges = useMemo(() => {
-    if (currentOutgoingEdges.length > 0) {
-      return [];
-    }
+    if (currentOutgoingEdges.length > 0) return [];
+
     const cell = cellMap.get(currentCellId);
-    if (!cell || cell.isDeadEnd) {
-      return [];
-    }
+    if (!cell || cell.isDeadEnd) return [];
+
     const neighborIds = Array.from(currentNeighbors);
-    if (neighborIds.length === 0) {
-      return [];
-    }
+    if (neighborIds.length === 0) return [];
+
     const targetCount = Math.min(4, Math.max(2, neighborIds.length));
     const answerOptions = buildAnswerOptions(
       cell.correctAnswerNumber,
       targetCount,
       cell.x + cell.y * gridSize
     );
+
     return neighborIds.slice(0, targetCount).map((neighborId, index) => {
       const toCell = cellMap.get(neighborId);
       return {
@@ -274,13 +302,18 @@ export default function MazeViewport({
       };
     });
   }, [cellMap, currentCellId, currentNeighbors, currentOutgoingEdges.length, gridSize]);
-  const labelEdges =
-    currentOutgoingEdges.length > 0 ? currentOutgoingEdges : fallbackEdges;
+
+  const labelEdges = (
+    currentOutgoingEdges.length > 0 ? currentOutgoingEdges : fallbackEdges
+  ).filter(isAllowedExitEdge);
+
   const isGameOver = false;
   const clickableEdgeIds = labelEdges.map((edge) => edge.toCellId);
+
   const isForcedDeadEnd = forcedDeadEnds.has(currentCellId);
   const isDeadEndNow =
     isForcedDeadEnd || Boolean(cellMap.get(currentCellId)?.isDeadEnd);
+
   const showEdges = hasEscaped;
 
   useEffect(() => {
@@ -290,9 +323,15 @@ export default function MazeViewport({
       "revealed?",
       isRevealed(currentCellId),
       "outgoing",
-      labelEdges
+      labelEdges,
+      "exitUnlocked",
+      exitUnlocked,
+      "furthestCorrectIndex",
+      furthestCorrectIndex,
+      "solutionIndex",
+      solutionIndex
     );
-  }, [currentCellId, isRevealed, labelEdges]);
+  }, [currentCellId, isRevealed, labelEdges, exitUnlocked, furthestCorrectIndex, solutionIndex]);
 
   const handleAdvance = (edge) => {
     console.log("[CLICK]", {
@@ -304,76 +343,77 @@ export default function MazeViewport({
       hasEscaped,
       isGameOver,
     });
+
     if (isMoving || hasEscaped) {
-      if (isMoving) {
-        console.log("blocked: isMoving");
-      }
-      if (hasEscaped) {
-        console.log("blocked: hasEscaped");
-      }
+      if (isMoving) console.log("blocked: isMoving");
+      if (hasEscaped) console.log("blocked: hasEscaped");
       return;
     }
     if (!edge || edge.fromCellId !== currentCellId) {
       console.log("blocked: invalid path");
       return;
     }
+
     const expectedNext = solutionNextMap.get(edge.fromCellId);
     const fromCell = cellMap.get(edge.fromCellId);
     const toCell = cellMap.get(edge.toCellId);
+
     const isCorrectMove =
       currentCellId === solutionPath[solutionIndex] &&
       expectedNext === edge.toCellId &&
       edge.answerNumber === fromCell.correctAnswerNumber &&
       edge.isCorrectEdge;
+
     const moveDirection = toCell
       ? directionFromDelta(toCell.x - fromCell.x, toCell.y - fromCell.y)
       : "UNK";
-    console.log("[MOVE]", {
-      from: edge.fromCellId,
-      to: edge.toCellId,
-      dir: moveDirection,
-    });
-    console.log(
-      "[move]",
-      edge.fromCellId,
-      edge.answerNumber,
-      edge.toCellId,
-      isCorrectMove,
-      moveDirection
-    );
-    if (toCell?.isExit && !isCorrectMove) {
+
+    console.log("[MOVE]", { from: edge.fromCellId, to: edge.toCellId, dir: moveDirection });
+
+    // ✅ FINAL HARD GUARD: never enter Exit unless unlocked
+    if (toCell?.isExit && !exitUnlocked) {
       setLastMoveType("blocked");
       return;
     }
 
     setIsMoving(true);
     setLastMoveType(isCorrectMove ? "forward" : "wrong");
+
     if (isCorrectMove) {
       markSolved(currentCellId);
+
+      // ✅ NEW: update proof-of-progress
+      const nextIndex = Math.min(solutionIndex + 1, solutionPath.length - 1);
+      setFurthestCorrectIndex((prev) => Math.max(prev, nextIndex));
     }
+
     markVisited(currentCellId);
     markVisited(edge.toCellId);
+
     if (!isCorrectMove && edge.toCellId && !solutionSet.has(edge.toCellId)) {
       setForcedDeadEnds((prev) => new Set([...prev, edge.toCellId]));
     }
+
     setAttemptsByCell((prev) => {
       const next = new Map(prev);
       next.set(currentCellId, (next.get(currentCellId) || 0) + 1);
       return next;
     });
+
     setChosenAnswerByCell((prev) => {
       const next = new Map(prev);
       next.set(currentCellId, edge.answerNumber);
       return next;
     });
+
     onAnswer(isCorrectMove);
     setCurrentCellId(edge.toCellId);
+
     if (isCorrectMove) {
       setSolutionIndex((prev) => Math.min(prev + 1, solutionPath.length - 1));
     }
-    if (moveTimeoutRef.current) {
-      clearTimeout(moveTimeoutRef.current);
-    }
+
+    if (moveTimeoutRef.current) clearTimeout(moveTimeoutRef.current);
     moveTimeoutRef.current = setTimeout(() => {
       setIsMoving(false);
     }, MOVE_DURATION_MS);
@@ -381,33 +421,30 @@ export default function MazeViewport({
 
   const handleBacktrack = (cellId) => {
     if (isMoving || hasEscaped || !canBacktrackTo(cellId)) {
-      if (isMoving) {
-        console.log("blocked: isMoving");
-      }
-      if (hasEscaped) {
-        console.log("blocked: hasEscaped");
-      }
-      if (!canBacktrackTo(cellId)) {
-        console.log("blocked: not adjacent/visited");
-      }
+      if (isMoving) console.log("blocked: isMoving");
+      if (hasEscaped) console.log("blocked: hasEscaped");
+      if (!canBacktrackTo(cellId)) console.log("blocked: not adjacent/visited");
       return;
     }
+
     const fromCell = cellMap.get(currentCellId);
     const toCell = cellMap.get(cellId);
     const moveDirection = toCell
       ? directionFromDelta(toCell.x - fromCell.x, toCell.y - fromCell.y)
       : "UNK";
+
     console.log("[move]", currentCellId, null, cellId, false, moveDirection);
+
     setIsMoving(true);
     setLastMoveType("back");
     setCurrentCellId(cellId);
+
     const backIndex = solutionIndexById.get(cellId);
     if (backIndex != null) {
       setSolutionIndex(backIndex);
     }
-    if (moveTimeoutRef.current) {
-      clearTimeout(moveTimeoutRef.current);
-    }
+
+    if (moveTimeoutRef.current) clearTimeout(moveTimeoutRef.current);
     moveTimeoutRef.current = setTimeout(() => {
       setIsMoving(false);
     }, MOVE_DURATION_MS);
@@ -418,8 +455,11 @@ export default function MazeViewport({
   const cellHeight = boardSize.height / gridSize;
   const spriteLeft = currentCell ? (currentCell.x + 0.5) * cellWidth : 0;
   const spriteTop = currentCell ? (currentCell.y + 0.5) * cellHeight : 0;
+
   const canShowLabels =
-    !isForcedDeadEnd && !cellMap.get(currentCellId)?.isDeadEnd && labelEdges.length > 0;
+    !isForcedDeadEnd &&
+    !cellMap.get(currentCellId)?.isDeadEnd &&
+    labelEdges.length > 0;
 
   return (
     <section className="maze-viewport" aria-label="Maze viewport">
@@ -445,15 +485,19 @@ export default function MazeViewport({
                     canBacktrackTo(cell.id) ? " is-clickable" : ""
                   }${!isVisible(cell.id) ? " is-hidden" : ""}${
                     revealAll && solutionSet.has(cell.id) ? " is-solution" : ""
-                  }${revealAll ? " is-revealed" : ""}
-                  }`}
+                  }${revealAll ? " is-revealed" : ""}`}
                   onClick={() => handleBacktrack(cell.id)}
                 >
                   <span className="maze-question">{cell.question}</span>
-                  {cell.isExit ? <span className="maze-exit-gap" aria-hidden="true" /> : null}
+
+                  {cell.isExit ? (
+                    <span className="maze-exit-gap" aria-hidden="true" />
+                  ) : null}
+
                   {cell.isDeadEnd ? (
                     <span className="maze-deadend-marker" aria-hidden="true" />
                   ) : null}
+
                   {isCurrent ? (
                     <div className="maze-cell-labels">
                       {canShowLabels
@@ -524,7 +568,9 @@ export default function MazeViewport({
                 <h2 className="game-over-title">GAME OVER</h2>
                 <div className="game-over-stats">
                   <div
-                    className={`game-over-stat high-score-display ${gameOverStats.isNewHighScore ? "is-new-high-score" : ""}`}
+                    className={`game-over-stat high-score-display ${
+                      gameOverStats.isNewHighScore ? "is-new-high-score" : ""
+                    }`}
                   >
                     <span className="game-over-stat-label">High Score</span>
                     <span className="game-over-stat-value">
@@ -534,26 +580,26 @@ export default function MazeViewport({
                       ) : null}
                     </span>
                   </div>
+
                   <div className="game-over-stat">
                     <span className="game-over-stat-label">Final Score</span>
                     <span className="game-over-stat-value">
                       {gameOverStats.finalScore}
                     </span>
                   </div>
+
                   <div className="game-over-stat">
-                    <span className="game-over-stat-label">
-                      Questions Answered
-                    </span>
+                    <span className="game-over-stat-label">Questions Answered</span>
                     <span className="game-over-stat-value">
                       {gameOverStats.questionsAnswered}
                     </span>
                   </div>
+
                   <div className="game-over-stat">
                     <span className="game-over-stat-label">Accuracy</span>
-                    <span className="game-over-stat-value">
-                      {gameOverStats.accuracy}%
-                    </span>
+                    <span className="game-over-stat-value">{gameOverStats.accuracy}%</span>
                   </div>
+
                   <div className="game-over-stat">
                     <span className="game-over-stat-label">Best Streak</span>
                     <span className="game-over-stat-value">
@@ -561,6 +607,7 @@ export default function MazeViewport({
                     </span>
                   </div>
                 </div>
+
                 <div className="game-over-buttons">
                   <button
                     type="button"
@@ -569,6 +616,7 @@ export default function MazeViewport({
                   >
                     Play Again
                   </button>
+
                   <button
                     type="button"
                     className="game-over-btn game-over-btn-outline"
@@ -589,6 +637,7 @@ export default function MazeViewport({
                   >
                     Share
                   </button>
+
                   <button
                     type="button"
                     className="game-over-btn game-over-btn-outline"
