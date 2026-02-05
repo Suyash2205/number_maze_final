@@ -276,7 +276,7 @@ body::before {
 
 .maze-question {
   font-weight: 700;
-  font-size: 1.2rem;
+  font-size: 1.35rem;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: #f4fdff;
@@ -296,12 +296,12 @@ body::before {
   position: absolute;
   pointer-events: auto;
   z-index: 50;
-  padding: 4px 8px;
+  padding: 5px 10px;
   border-radius: 999px;
   background: rgba(6, 22, 26, 0.92);
   border: 1px solid rgba(0, 200, 210, 0.45);
   font-weight: 700;
-  font-size: 0.7rem;
+  font-size: 0.85rem;
   letter-spacing: 0.08em;
   color: #dffcff;
   box-shadow: 0 8px 18px rgba(3, 12, 14, 0.6);
@@ -378,12 +378,12 @@ body::before {
   position: absolute;
   z-index: 6;
   transform: translate(-50%, -50%) translate(var(--label-offset-x), var(--label-offset-y));
-  padding: 4px 8px;
+  padding: 5px 10px;
   border-radius: 999px;
   background: rgba(6, 22, 26, 0.9);
   border: 1px solid rgba(0, 200, 210, 0.4);
   font-weight: 700;
-  font-size: 0.75rem;
+  font-size: 0.9rem;
   letter-spacing: 0.08em;
   color: #dffcff;
   box-shadow: 0 8px 18px rgba(3, 12, 14, 0.6);
@@ -830,11 +830,11 @@ body::before {
   }
 
   .maze-question {
-    font-size: 1rem;
+    font-size: 1.25rem;
   }
 
   .maze-path-label {
-    font-size: 0.85rem;
+    font-size: 1rem;
   }
 }
 
