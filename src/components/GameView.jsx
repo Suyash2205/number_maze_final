@@ -53,6 +53,7 @@ export default function GameView({ onBackToHome, onPlayAgain }) {
   const [bestStreak, setBestStreak] = useState(0);
   const [highScore, setHighScore] = useState(loadHighScore);
   const [isNewHighScore, setIsNewHighScore] = useState(false);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
   const elapsedRef = useRef(0);
   const scoreRef = useRef(0);
   const correctRef = useRef(0);
@@ -157,6 +158,13 @@ export default function GameView({ onBackToHome, onPlayAgain }) {
   const timeDisplay = formatTime(elapsedSeconds);
   const recordDisplay = recordSeconds != null ? formatTime(recordSeconds) : null;
 
+  const handleRequestExit = () => setShowExitConfirm(true);
+  const handleCancelExit = () => setShowExitConfirm(false);
+  const handleConfirmExit = () => {
+    setShowExitConfirm(false);
+    onBackToHome();
+  };
+
   return (
     <GameShell
       topBar={
@@ -164,6 +172,7 @@ export default function GameView({ onBackToHome, onPlayAgain }) {
           timeDisplay={timeDisplay}
           recordDisplay={recordDisplay}
           score={finalScore != null ? finalScore : score}
+          onBack={handleRequestExit}
         />
       }
       mainContent={
@@ -181,6 +190,34 @@ export default function GameView({ onBackToHome, onPlayAgain }) {
           onPlayAgain={onPlayAgain}
           onBackToHome={onBackToHome}
         />
+      }
+      overlay={
+        showExitConfirm ? (
+          <div className="exit-confirm-overlay" role="dialog" aria-modal="true">
+            <div className="exit-confirm-card">
+              <h2 className="exit-confirm-title">Leave Game?</h2>
+              <p className="exit-confirm-subtitle">
+                Your progress in this round will be lost.
+              </p>
+              <div className="exit-confirm-actions">
+                <button
+                  type="button"
+                  className="exit-confirm-primary"
+                  onClick={handleConfirmExit}
+                >
+                  Yes, Leave
+                </button>
+                <button
+                  type="button"
+                  className="exit-confirm-outline"
+                  onClick={handleCancelExit}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null
       }
     />
   );

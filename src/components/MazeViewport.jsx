@@ -455,6 +455,8 @@ export default function MazeViewport({
   const cellHeight = boardSize.height / gridSize;
   const spriteLeft = currentCell ? (currentCell.x + 0.5) * cellWidth : 0;
   const spriteTop = currentCell ? (currentCell.y + 0.5) * cellHeight : 0;
+  const spriteOffsetX = currentCell ? -cellWidth / 2 + 18 : 0;
+  const spriteOffsetY = currentCell ? -cellHeight / 2 + 18 : 0;
 
   const canShowLabels =
     !isForcedDeadEnd &&
@@ -546,8 +548,8 @@ export default function MazeViewport({
                 style={{
                   left: `${spriteLeft}px`,
                   top: `${spriteTop}px`,
-                  "--sprite-offset-x": "-4px",
-                  "--sprite-offset-y": "14px",
+                  "--sprite-offset-x": `${spriteOffsetX}px`,
+                  "--sprite-offset-y": `${spriteOffsetY}px`,
                   "--move-duration": `${MOVE_DURATION_MS}ms`,
                 }}
                 aria-label="Runner"
