@@ -1,31 +1,32 @@
 import { useState, useCallback } from "react";
-import { generateQuestion, setGrade, getGrade } from "../data/questionGenerator.js";
+import { setGrade } from "../data/questionGenerator.js";
 
 export default function GradeSelectPage({ onStart }) {
-  const [selectedGrade, setSelectedGrade] = useState(getGrade);
-  const [preview, setPreview] = useState(() => generateQuestion(getGrade()));
+  const [selectedGrade, setSelectedGrade] = useState(null);
 
   const handleSelect = useCallback((grade) => {
     setGrade(grade);
     setSelectedGrade(grade);
-    setPreview(generateQuestion(grade));
   }, []);
 
   const handleStart = useCallback(() => {
+    if (!selectedGrade) {
+      return;
+    }
     setGrade(selectedGrade);
     onStart();
   }, [selectedGrade, onStart]);
 
-  const refreshPreview = useCallback(() => {
-    setPreview(generateQuestion(selectedGrade));
-  }, [selectedGrade]);
-
   return (
     <div className="grade-select-page">
       <div className="grade-select-card">
-        <h1 className="grade-select-title">Number Path Runner</h1>
-        <p className="grade-select-subtitle">Choose your grade</p>
-        <div className="grade-select-buttons">
+        <div className="grade-select-logo" aria-hidden="true" />
+        <div className="grade-select-kicker">Brain Racers</div>
+        <h1 className="grade-select-title">Choose Your Grade</h1>
+        <p className="grade-select-subtitle">
+          We'll adjust the question difficulty for you!
+        </p>
+        <div className="grade-select-buttons is-stack">
           {[3, 4, 5, 6, 7].map((g) => (
             <button
               key={g}
@@ -37,14 +38,11 @@ export default function GradeSelectPage({ onStart }) {
             </button>
           ))}
         </div>
-        <div className="grade-select-preview">
-          <span className="grade-select-preview-label">Sample question:</span>
-          <span className="grade-select-preview-question">{preview.question}</span>
-          <button type="button" className="grade-select-refresh" onClick={refreshPreview}>
-            New
-          </button>
-        </div>
-        <button type="button" className="grade-select-start" onClick={handleStart}>
+        <button
+          type="button"
+          className={`grade-select-start${selectedGrade ? " is-ready" : ""}`}
+          onClick={handleStart}
+        >
           Start Game
         </button>
       </div>

@@ -6,19 +6,50 @@
 
 :root {
   font-family: "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
-  color: #f5f3ff;
-  background-color: #0a0f1f;
+  color: #f4fdff;
+  background-color: #062a2e;
   --topbar-height: 72px;
+  --br-bg-deep: #04191c;
+  --br-bg-mid: #08343a;
+  --br-bg-bright: #0ea3b0;
+  --br-card: rgba(8, 34, 38, 0.92);
+  --br-card-strong: rgba(10, 44, 50, 0.95);
+  --br-border: rgba(0, 200, 210, 0.35);
+  --br-border-strong: rgba(0, 220, 230, 0.55);
+  --br-accent: #25d6df;
+  --br-accent-strong: #00e7f0;
+  --br-gold: #f0b93d;
 }
 
 body {
   margin: 0;
   min-height: 100vh;
-  background: radial-gradient(circle at top, #1a2250, #0a0f1f 55%);
+  background:
+    radial-gradient(circle at 20% -10%, rgba(36, 222, 229, 0.35), transparent 45%),
+    radial-gradient(circle at 80% 0%, rgba(20, 160, 170, 0.35), transparent 50%),
+    linear-gradient(180deg, #0ea0ad 0%, #0b6f7a 35%, #062f35 70%, #04191c 100%);
+  position: relative;
+  overflow-x: hidden;
 }
 
 #root {
   min-height: 100vh;
+  position: relative;
+  z-index: 1;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image:
+    radial-gradient(circle, rgba(210, 250, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(transparent 97%, rgba(210, 250, 255, 0.03) 100%),
+    linear-gradient(90deg, transparent 97%, rgba(210, 250, 255, 0.03) 100%);
+  background-size: 90px 90px, 90px 90px, 90px 90px;
+  opacity: 0.45;
+  pointer-events: none;
+  z-index: 0;
 }
 
 .game-shell {
@@ -35,8 +66,8 @@ body {
   right: 0;
   height: var(--topbar-height);
   backdrop-filter: blur(12px);
-  background: rgba(9, 12, 28, 0.9);
-  border-bottom: 1px solid rgba(120, 140, 255, 0.2);
+  background: rgba(4, 20, 24, 0.92);
+  border-bottom: 1px solid rgba(0, 200, 210, 0.2);
   display: flex;
   align-items: center;
   z-index: 10;
@@ -62,19 +93,19 @@ body {
 
 .game-mode {
   font-size: 0.75rem;
-  color: #9aa5ff;
+  color: rgba(190, 250, 255, 0.8);
   letter-spacing: 0.2em;
 }
 
 .timer-chip {
   padding: 6px 12px;
   border-radius: 999px;
-  background: linear-gradient(135deg, #2b3d8f, #1a2a6c);
-  border: 1px solid rgba(110, 130, 255, 0.6);
+  background: linear-gradient(135deg, rgba(0, 210, 220, 0.35), rgba(0, 120, 130, 0.6));
+  border: 1px solid rgba(0, 220, 230, 0.55);
   font-variant-numeric: tabular-nums;
   font-weight: 700;
   letter-spacing: 0.08em;
-  box-shadow: 0 8px 20px rgba(9, 12, 28, 0.4);
+  box-shadow: 0 8px 20px rgba(3, 14, 16, 0.45);
 }
 
 .timer-stack {
@@ -93,9 +124,24 @@ body {
   padding: 24px 16px 32px;
 }
 
+@media (max-height: 720px) {
+  .game-stage {
+    padding: 16px 12px 20px;
+  }
+
+  .maze-shell {
+    width: min(74vmin, 600px);
+    height: min(74vmin, 600px);
+  }
+
+  .maze-frame {
+    height: 100%;
+  }
+}
+
 .maze-shell {
-  width: 100%;
-  max-width: 720px;
+  width: min(82vmin, 680px);
+  height: min(82vmin, 680px);
   display: flex;
   justify-content: center;
 }
@@ -106,16 +152,16 @@ body {
 
 .maze-frame {
   width: 100%;
-  aspect-ratio: 1 / 1;
-  border-radius: 20px;
-  background: linear-gradient(160deg, #1c2a5a, #0f152d);
-  border: 2px solid rgba(120, 140, 255, 0.3);
-  box-shadow: inset 0 0 0 2px rgba(10, 15, 30, 0.6),
-    0 24px 40px rgba(6, 9, 24, 0.6);
+  height: 100%;
+  border-radius: 24px;
+  background: linear-gradient(160deg, rgba(10, 40, 46, 0.98), rgba(6, 22, 26, 0.98));
+  border: 2px solid var(--br-border);
+  box-shadow: inset 0 0 0 2px rgba(3, 14, 16, 0.8),
+    0 26px 44px rgba(3, 12, 14, 0.55);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 14px;
+  padding: clamp(10px, 2.4vmin, 14px);
 }
 
 .maze-board {
@@ -136,8 +182,8 @@ body {
 
 .maze-cell {
   border-radius: 10px;
-  background: rgba(12, 18, 38, 0.9);
-  border: 1px solid rgba(130, 150, 255, 0.2);
+  background: rgba(7, 24, 28, 0.92);
+  border: 1px solid rgba(0, 200, 210, 0.22);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -148,22 +194,22 @@ body {
 }
 
 .maze-cell.is-exit {
-  border-color: rgba(120, 255, 196, 0.7);
-  box-shadow: inset 0 0 0 2px rgba(52, 255, 200, 0.15);
+  border-color: rgba(0, 230, 220, 0.75);
+  box-shadow: inset 0 0 0 2px rgba(0, 230, 220, 0.2);
 }
 
 .maze-cell.is-solution {
-  box-shadow: 0 0 0 2px rgba(120, 255, 196, 0.4),
-    0 0 14px rgba(120, 255, 196, 0.35);
+  box-shadow: 0 0 0 2px rgba(0, 230, 220, 0.4),
+    0 0 14px rgba(0, 230, 220, 0.35);
 }
 
 .maze-cell.is-current {
-  border-color: rgba(140, 190, 255, 0.95);
+  border-color: rgba(120, 245, 250, 0.95);
   box-shadow:
-    0 0 0 2px rgba(120, 170, 255, 0.45),
-    0 0 14px rgba(120, 170, 255, 0.35),
-    inset 0 0 18px rgba(120, 170, 255, 0.12); /* ⬅ added */
-  outline: 1px dashed rgba(140, 190, 255, 0.6);
+    0 0 0 2px rgba(0, 230, 240, 0.45),
+    0 0 14px rgba(0, 230, 240, 0.35),
+    inset 0 0 18px rgba(0, 230, 240, 0.12);
+  outline: 1px dashed rgba(140, 245, 250, 0.6);
 }
 
 
@@ -173,7 +219,7 @@ body {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: rgba(150, 170, 255, 0.7);
+  background: rgba(150, 240, 245, 0.7);
   bottom: 8px;
   right: 8px;
 }
@@ -184,10 +230,10 @@ body {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  border: 2px solid rgba(120, 255, 196, 0.8);
+  border: 2px solid rgba(0, 230, 220, 0.8);
   top: 7px;
   left: 7px;
-  box-shadow: 0 0 8px rgba(120, 255, 196, 0.45);
+  box-shadow: 0 0 8px rgba(0, 230, 220, 0.45);
 }
 
 .maze-cell.is-clickable {
@@ -195,7 +241,7 @@ body {
 }
 
 .maze-cell.is-clickable:hover {
-  border-color: rgba(150, 190, 255, 0.6);
+  border-color: rgba(120, 235, 240, 0.65);
 }
 
 .maze-cell.is-hidden {
@@ -230,11 +276,11 @@ body {
 
 .maze-question {
   font-weight: 700;
-  font-size: 1.2rem;        /* ⬅ increase from 0.9rem */
-  letter-spacing: 0.05em;  /* ⬅ reduce spacing slightly */
+  font-size: 1.2rem;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: #f7f6ff;
-  text-shadow: 0 2px 6px rgba(8, 10, 24, 0.6);
+  color: #f4fdff;
+  text-shadow: 0 2px 6px rgba(3, 12, 14, 0.6);
 }
 
 .maze-cell-label {
@@ -252,13 +298,13 @@ body {
   z-index: 50;
   padding: 4px 8px;
   border-radius: 999px;
-  background: rgba(6, 10, 26, 0.9);
-  border: 1px solid rgba(120, 140, 255, 0.5);
+  background: rgba(6, 22, 26, 0.92);
+  border: 1px solid rgba(0, 200, 210, 0.45);
   font-weight: 700;
   font-size: 0.7rem;
   letter-spacing: 0.08em;
-  color: #d9e0ff;
-  box-shadow: 0 8px 18px rgba(4, 6, 20, 0.6);
+  color: #dffcff;
+  box-shadow: 0 8px 18px rgba(3, 12, 14, 0.6);
   transform: translate(-50%, -50%);
 }
 
@@ -320,12 +366,12 @@ body {
   position: absolute;
   height: 4px;
   border-radius: 999px;
-  background: linear-gradient(90deg, rgba(120, 140, 255, 0.2), rgba(120, 140, 255, 0.6));
+  background: linear-gradient(90deg, rgba(80, 210, 220, 0.2), rgba(80, 210, 220, 0.7));
   transform-origin: 0 50%;
 }
 
 .maze-path-line.is-solution {
-  background: linear-gradient(90deg, rgba(120, 255, 196, 0.3), rgba(120, 255, 196, 0.8));
+  background: linear-gradient(90deg, rgba(0, 230, 220, 0.3), rgba(0, 230, 220, 0.85));
 }
 
 .maze-path-label {
@@ -334,13 +380,13 @@ body {
   transform: translate(-50%, -50%) translate(var(--label-offset-x), var(--label-offset-y));
   padding: 4px 8px;
   border-radius: 999px;
-  background: rgba(6, 10, 26, 0.88);
-  border: 1px solid rgba(120, 140, 255, 0.4);
+  background: rgba(6, 22, 26, 0.9);
+  border: 1px solid rgba(0, 200, 210, 0.4);
   font-weight: 700;
   font-size: 0.75rem;
   letter-spacing: 0.08em;
-  color: #d9e0ff;
-  box-shadow: 0 8px 18px rgba(4, 6, 20, 0.6);
+  color: #dffcff;
+  box-shadow: 0 8px 18px rgba(3, 12, 14, 0.6);
   cursor: pointer;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
   appearance: none;
@@ -355,8 +401,8 @@ body {
 }
 
 .maze-path-label.is-clickable:focus-visible {
-  box-shadow: 0 0 0 2px rgba(160, 200, 255, 0.6),
-    0 12px 22px rgba(4, 6, 20, 0.7);
+  box-shadow: 0 0 0 2px rgba(0, 220, 230, 0.6),
+    0 12px 22px rgba(3, 12, 14, 0.7);
 }
 
 .maze-labels {
@@ -372,8 +418,8 @@ body {
   left: 50%;
   transform: translateX(-50%);
   z-index: 6;
-  background: rgba(10, 14, 32, 0.85);
-  border: 1px solid rgba(255, 180, 120, 0.4);
+  background: rgba(10, 28, 32, 0.85);
+  border: 1px solid rgba(255, 200, 120, 0.4);
   border-radius: 12px;
   padding: 10px 16px;
   text-align: center;
@@ -384,13 +430,13 @@ body {
   font-size: 0.85rem;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: rgba(255, 200, 150, 0.9);
+  color: rgba(255, 215, 150, 0.9);
 }
 
 .maze-deadend-subtitle {
   font-size: 0.7rem;
   letter-spacing: 0.08em;
-  color: rgba(210, 220, 255, 0.7);
+  color: rgba(210, 245, 250, 0.75);
   margin-top: 4px;
 }
 
@@ -420,8 +466,8 @@ body {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, #fff4c2, #ff9b5c);
-  box-shadow: 0 0 0 3px rgba(255, 180, 120, 0.25),
+  background: radial-gradient(circle at 30% 30%, #fff7c9, var(--br-gold));
+  box-shadow: 0 0 0 3px rgba(255, 200, 140, 0.25),
     0 10px 20px rgba(0, 0, 0, 0.45);
   transform: translate(-50%, -50%)
     translate(var(--sprite-offset-x, 0px), var(--sprite-offset-y, 0px));
@@ -446,8 +492,8 @@ body {
   width: 8px;
   height: 8px;
   border-radius: 2px;
-  background: rgba(255, 180, 120, 0.6);
-  box-shadow: 0 0 6px rgba(255, 180, 120, 0.4);
+  background: rgba(255, 200, 120, 0.7);
+  box-shadow: 0 0 6px rgba(255, 200, 120, 0.45);
 }
 
 .maze-overlay {
@@ -456,17 +502,17 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(7, 10, 22, 0.7);
+  background: rgba(5, 18, 20, 0.7);
   z-index: 6;
 }
 
 .maze-overlay-card {
   padding: 20px 28px;
   border-radius: 16px;
-  background: rgba(14, 18, 38, 0.95);
-  border: 1px solid rgba(120, 140, 255, 0.35);
+  background: var(--br-card-strong);
+  border: 1px solid var(--br-border);
   text-align: center;
-  box-shadow: 0 20px 40px rgba(4, 6, 20, 0.5);
+  box-shadow: 0 20px 40px rgba(3, 12, 14, 0.5);
 }
 
 .maze-overlay-title {
@@ -478,20 +524,20 @@ body {
 
 .maze-overlay-subtitle {
   font-size: 0.9rem;
-  color: rgba(210, 220, 255, 0.8);
+  color: rgba(210, 245, 250, 0.85);
   letter-spacing: 0.08em;
 }
 
 .maze-overlay-score {
   font-weight: 700;
   font-size: 1rem;
-  color: #b8d4ff;
+  color: #bdfcff;
   margin-top: 4px;
 }
 
 .maze-overlay-coins {
   font-weight: 600;
-  color: #e8c547;
+  color: var(--br-gold);
   margin-top: 2px;
 }
 
@@ -499,7 +545,7 @@ body {
   margin-top: 10px;
   font-size: 0.85rem;
   font-weight: 700;
-  color: #9fdc9f;
+  color: rgba(170, 255, 230, 0.95);
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
@@ -511,16 +557,16 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(7, 22, 25, 0.85);
+  background: rgba(5, 20, 22, 0.85);
   z-index: 6;
 }
 
 .game-over-card {
   padding: 24px 32px;
   border-radius: 20px;
-  background: rgba(12, 28, 32, 0.97);
-  border: 1px solid rgba(0, 180, 180, 0.25);
-  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4);
+  background: linear-gradient(180deg, rgba(10, 44, 50, 0.98), rgba(7, 28, 32, 0.98));
+  border: 1px solid rgba(0, 210, 220, 0.35);
+  box-shadow: 0 26px 52px rgba(2, 8, 10, 0.5);
   text-align: center;
   max-width: 380px;
   width: 90%;
@@ -531,7 +577,7 @@ body {
   font-weight: 700;
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  color: #fff;
+  color: var(--br-gold);
   margin: 0 0 20px 0;
 }
 
@@ -549,8 +595,8 @@ body {
   justify-content: center;
   padding: 12px 16px;
   border-radius: 12px;
-  background: rgba(18, 42, 48, 0.8);
-  border: 1px solid rgba(0, 180, 180, 0.2);
+  background: rgba(8, 30, 34, 0.85);
+  border: 1px solid rgba(0, 210, 220, 0.25);
 }
 
 .game-over-stat.high-score-display {
@@ -562,14 +608,14 @@ body {
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.85);
+  color: rgba(230, 255, 255, 0.85);
   margin-bottom: 4px;
 }
 
 .game-over-stat-value {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #e8c547;
+  color: var(--br-gold);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -586,8 +632,8 @@ body {
   font-weight: 700;
   padding: 2px 8px;
   border-radius: 6px;
-  background: rgba(0, 200, 150, 0.3);
-  color: #5fffd7;
+  background: rgba(240, 185, 61, 0.25);
+  color: #ffde8a;
   letter-spacing: 0.05em;
   margin-left: 6px;
 }
@@ -614,30 +660,30 @@ body {
 }
 
 .game-over-btn-primary {
-  background: linear-gradient(135deg, #00b4a0, #008c7a);
+  background: linear-gradient(135deg, #35e1d7, #1fb3ab);
   border: none;
   color: #fff;
-  box-shadow: 0 4px 12px rgba(0, 180, 160, 0.35);
+  box-shadow: 0 6px 16px rgba(0, 200, 210, 0.35);
 }
 
 .game-over-btn-primary:hover {
-  background: linear-gradient(135deg, #00c4b0, #009c8a);
+  background: linear-gradient(135deg, #4cebe3, #27c2bb);
 }
 
 .game-over-btn-outline {
   background: transparent;
-  border: 2px solid #00b4a0;
+  border: 2px solid rgba(0, 210, 220, 0.7);
   color: #fff;
 }
 
 .game-over-btn-outline:hover {
-  background: rgba(0, 180, 160, 0.15);
-  border-color: #00c4b0;
+  background: rgba(0, 200, 210, 0.18);
+  border-color: rgba(0, 220, 230, 0.9);
 }
 
 .timer-stack .record-chip {
-  background: linear-gradient(135deg, #1a4d1a, #0d2d0d);
-  border-color: rgba(120, 220, 120, 0.5);
+  background: linear-gradient(135deg, #126b54, #0b3f33);
+  border-color: rgba(120, 230, 200, 0.5);
   font-size: 0.8rem;
 }
 
@@ -647,30 +693,51 @@ body {
   align-items: center;
   justify-content: center;
   padding: 24px;
+  text-align: center;
 }
 
 .grade-select-card {
-  padding: 28px 32px;
-  border-radius: 16px;
-  background: rgba(14, 18, 38, 0.95);
-  border: 1px solid rgba(120, 140, 255, 0.35);
+  padding: 32px 32px 28px;
+  border-radius: 24px;
+  background: rgba(6, 22, 26, 0.72);
+  border: 1px solid rgba(0, 200, 210, 0.25);
   text-align: center;
   max-width: 420px;
-  box-shadow: 0 20px 40px rgba(4, 6, 20, 0.5);
+  width: min(420px, 100%);
+  box-shadow: 0 24px 48px rgba(2, 8, 10, 0.45);
+  backdrop-filter: blur(6px);
+}
+
+.grade-select-logo {
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 12px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #ffd0d0, #ff7f9a);
+  box-shadow: 0 10px 18px rgba(3, 10, 12, 0.35);
+}
+
+.grade-select-kicker {
+  font-size: 0.8rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgba(210, 250, 255, 0.7);
+  margin-bottom: 6px;
 }
 
 .grade-select-title {
-  font-size: 1.2rem;
+  font-size: 1.45rem;
   font-weight: 700;
   letter-spacing: 0.08em;
-  margin: 0 0 6px;
+  margin: 0 0 8px;
+  text-transform: uppercase;
 }
 
 .grade-select-subtitle {
   font-size: 0.85rem;
-  color: #9aa5ff;
-  letter-spacing: 0.1em;
-  margin: 0 0 20px;
+  color: rgba(190, 250, 255, 0.8);
+  letter-spacing: 0.08em;
+  margin: 0 0 24px;
 }
 
 .grade-select-buttons {
@@ -678,69 +745,75 @@ body {
   gap: 8px;
   justify-content: center;
   flex-wrap: wrap;
-  margin-bottom: 24px;
+  margin-bottom: 22px;
+}
+
+.grade-select-buttons.is-stack {
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
 }
 
 .grade-select-btn {
-  padding: 10px 18px;
+  padding: 12px 22px;
   border-radius: 999px;
-  background: linear-gradient(135deg, #2b3d8f, #1a2a6c);
-  border: 1px solid rgba(110, 130, 255, 0.6);
-  color: #f5f3ff;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  cursor: pointer;
-}
-
-.grade-select-btn.selected {
-  background: linear-gradient(135deg, #3d4fa8, #2a3a8c);
-  border-color: rgba(150, 170, 255, 0.8);
-  box-shadow: 0 0 12px rgba(120, 140, 255, 0.3);
-}
-
-.grade-select-preview {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-bottom: 24px;
-  padding: 14px;
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 8px;
-}
-
-.grade-select-preview-label {
-  font-size: 0.75rem;
-  color: #9aa5ff;
-  letter-spacing: 0.08em;
-}
-
-.grade-select-preview-question {
-  font-size: 1rem;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-}
-
-.grade-select-refresh {
-  padding: 4px 10px;
-  font-size: 0.75rem;
-  background: rgba(120, 140, 255, 0.2);
-  border: 1px solid rgba(110, 130, 255, 0.4);
-  border-radius: 6px;
-  color: #c5d0ff;
-  cursor: pointer;
-}
-
-.grade-select-start {
-  padding: 12px 32px;
-  border-radius: 999px;
-  background: linear-gradient(135deg, #2d5a2d, #1a401a);
-  border: 1px solid rgba(120, 220, 120, 0.5);
-  color: #f5f3ff;
+  background: linear-gradient(135deg, #38e0d7, #1fb3ab);
+  border: 1px solid rgba(0, 230, 240, 0.6);
+  color: #ffffff;
   font-weight: 700;
   letter-spacing: 0.08em;
   cursor: pointer;
+  width: 180px;
+  text-transform: uppercase;
+  box-shadow: 0 10px 18px rgba(3, 12, 14, 0.35);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+}
+
+.grade-select-btn.selected {
+  background: linear-gradient(135deg, #4cf0e8, #22c6bf);
+  border-color: rgba(0, 240, 250, 0.9);
+  box-shadow:
+    0 0 0 2px rgba(0, 235, 245, 0.5),
+    0 0 20px rgba(0, 230, 240, 0.45),
+    0 12px 22px rgba(3, 12, 14, 0.4);
+  transform: translateY(-2px) scale(1.02);
+  filter: brightness(1.05);
+}
+
+.grade-select-btn.selected::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 999px;
+  border: 2px solid rgba(0, 230, 240, 0.35);
+  box-shadow: 0 0 18px rgba(0, 230, 240, 0.35);
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.grade-select-btn {
+  position: relative;
+}
+
+.grade-select-start {
+  padding: 12px 36px;
+  border-radius: 999px;
+  background: rgba(10, 40, 46, 0.7);
+  border: 2px solid rgba(0, 210, 220, 0.65);
+  color: #ffffff;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+}
+
+.grade-select-start.is-ready {
+  border-color: rgba(0, 230, 240, 0.95);
+  box-shadow:
+    0 0 0 2px rgba(0, 235, 245, 0.45),
+    0 0 22px rgba(0, 230, 240, 0.55);
+  transform: translateY(-1px);
 }
 
 @media (min-width: 640px) {
