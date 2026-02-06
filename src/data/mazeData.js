@@ -529,16 +529,17 @@ const assignAnswerNumbers = (cells, paths, solutionPath) => {
       return;
     }
     const seed = cell.x + cell.y * gridSize;
-    const assignUniqueEdgeNumbers = ({ includeCorrect }) => {
+    const assignUniqueEdgeNumbers = () => {
       const used = new Set();
       const edgeValues = new Map();
       const correctEdge = edges.find((edge) => edge.isCorrectEdge);
-      if (includeCorrect && correctEdge) {
+      const primaryEdge = correctEdge || edges[0];
+      if (primaryEdge) {
         used.add(cell.correctAnswerNumber);
-        edgeValues.set(correctEdge, cell.correctAnswerNumber);
+        edgeValues.set(primaryEdge, cell.correctAnswerNumber);
       }
 
-      const remainingEdges = edges.filter((edge) => edge !== correctEdge);
+      const remainingEdges = edges.filter((edge) => edge !== primaryEdge);
       const desiredCount = remainingEdges.length;
       let attempt = 0;
       let values = [];
@@ -575,11 +576,7 @@ const assignAnswerNumbers = (cells, paths, solutionPath) => {
       cell.answerOptions = edges.map((edge) => edge.answerNumber);
     };
 
-    if (solutionSet.has(cell.id)) {
-      assignUniqueEdgeNumbers({ includeCorrect: true });
-    } else {
-      assignUniqueEdgeNumbers({ includeCorrect: false });
-    }
+    assignUniqueEdgeNumbers();
     const answerSet = new Set(cell.answerOptions);
     if (answerSet.size !== cell.answerOptions.length) {
       console.warn("Duplicate answers detected for cell", cell.id, cell.answerOptions);

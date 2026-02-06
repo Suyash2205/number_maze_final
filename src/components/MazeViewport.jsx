@@ -131,6 +131,7 @@ export default function MazeViewport({
   const [chosenAnswerByCell, setChosenAnswerByCell] = useState(() => new Map());
   const [isMoving, setIsMoving] = useState(false);
   const [lastMoveType, setLastMoveType] = useState("none");
+  const [previousCellId, setPreviousCellId] = useState(null);
   const [revealAll, setRevealAll] = useState(false);
   const [hasEscaped, setHasEscaped] = useState(false);
   const [forcedDeadEnds, setForcedDeadEnds] = useState(() => new Set());
@@ -258,10 +259,13 @@ export default function MazeViewport({
     setVisitedCells((prev) => new Set([...prev, cellId]));
   };
 
-  const visibleSet = useMemo(
-    () => new Set([currentCellId, ...currentNeighbors]),
-    [currentCellId, currentNeighbors]
-  );
+  const visibleSet = useMemo(() => {
+    const set = new Set([currentCellId, ...currentNeighbors]);
+    if (previousCellId) {
+      set.add(previousCellId);
+    }
+    return set;
+  }, [currentCellId, currentNeighbors, previousCellId]);
   const isVisible = (cellId) => revealAll || visibleSet.has(cellId);
   const isRevealed = (cellId) => isVisible(cellId);
 
@@ -412,6 +416,7 @@ export default function MazeViewport({
     });
 
     onAnswer(isCorrectMove);
+    setPreviousCellId(currentCellId);
     setCurrentCellId(edge.toCellId);
 
     if (isCorrectMove) {
@@ -442,6 +447,7 @@ export default function MazeViewport({
 
     setIsMoving(true);
     setLastMoveType("back");
+    setPreviousCellId(currentCellId);
     setCurrentCellId(cellId);
 
     const backIndex = solutionIndexById.get(cellId);
