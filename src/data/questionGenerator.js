@@ -9,6 +9,11 @@ function randomInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+function normalizeAnswer(value, allowDecimal) {
+  const rounded = allowDecimal ? Math.round(value * 10) / 10 : Math.round(value);
+  return Number.isFinite(rounded) ? rounded : value;
+}
+
 export function getGrade() {
   try {
     const stored = localStorage.getItem(GRADE_STORAGE_KEY);
@@ -69,7 +74,7 @@ function buildMathExpression(config) {
     else if (op === "×") b = randomInt(1, 12);
     else b = randomInt(1, cap - a);
     const v = op === "+" ? a + b : op === "−" ? a - b : a * b;
-    return { question: `${a} ${op} ${b}`, answer: Math.round(v) };
+    return { question: `${a} ${op} ${b}`, answer: normalizeAnswer(v, allowDecimal) };
   }
 
   if (ops === 2) {
@@ -78,12 +83,15 @@ function buildMathExpression(config) {
       const q = randomInt(1, Math.floor(cap / d));
       const a = q * d;
       const b = randomInt(1, 50);
-      return { question: `(${a} / ${d}) + ${b}`, answer: q + b };
+      return {
+        question: `(${a} / ${d}) + ${b}`,
+        answer: normalizeAnswer(q + b, allowDecimal),
+      };
     }
     const a = randomInt(1, 30);
     const b = randomInt(2, 10);
     const c = randomInt(1, 50);
-    return { question: `${a} + ${b} × ${c}`, answer: a + b * c };
+    return { question: `${a} + ${b} × ${c}`, answer: normalizeAnswer(a + b * c, allowDecimal) };
   }
 
   if (ops === 3) {
@@ -92,7 +100,7 @@ function buildMathExpression(config) {
       const b = randomInt(2, 12);
       const c = randomInt(1, 20);
       const v = -a + b * c;
-      return { question: `-${a} + ${b} × ${c}`, answer: Math.round(v) };
+      return { question: `-${a} + ${b} × ${c}`, answer: normalizeAnswer(v, allowDecimal) };
     }
     if (allowDecimal && Math.random() < 0.4) {
       const w = randomInt(1, 15);
@@ -100,7 +108,7 @@ function buildMathExpression(config) {
       const b = randomInt(2, 6);
       const c = randomInt(1, 10);
       const v = w + t / 10 + b * c;
-      return { question: `${w}.${t} + ${b} × ${c}`, answer: Math.round(v) };
+      return { question: `${w}.${t} + ${b} × ${c}`, answer: normalizeAnswer(v, true) };
     }
     if (Math.random() < 0.5) {
       const a = randomInt(50, cap);
@@ -108,14 +116,14 @@ function buildMathExpression(config) {
       const c = randomInt(2, 10);
       const d = randomInt(10, 60);
       const v = a - b * c + d;
-      return { question: `${a} − ${b} × ${c} + ${d}`, answer: Math.round(v) };
+      return { question: `${a} − ${b} × ${c} + ${d}`, answer: normalizeAnswer(v, allowDecimal) };
     }
     const a = randomInt(50, 150);
     const b = randomInt(2, 12);
     const c = randomInt(1, 50);
     const d = randomInt(2, 8);
     const v = Math.floor(a / b) + c * d;
-    return { question: `(${a} / ${b}) + ${c} × ${d}`, answer: v };
+    return { question: `(${a} / ${b}) + ${c} × ${d}`, answer: normalizeAnswer(v, allowDecimal) };
   }
 
   if (ops === 4 && allowExponent && allowFractions) {
@@ -127,9 +135,9 @@ function buildMathExpression(config) {
         const [n2, d2] = f2.split("/").map(Number);
         const mult = d1 * d2;
         const sum = (n1 * d2 + n2 * d1) / mult;
-        const v = Math.round(sum * mult);
-        if (v !== sum * mult || v < 2) return null;
-        return { q: `(${f1} + ${f2}) × ${mult}`, v };
+        const v = sum * mult;
+        if (v < 2) return null;
+        return { q: `(${f1} + ${f2}) × ${mult}`, v: normalizeAnswer(v, true) };
       },
       () => {
         const e1 = randomExponent();
@@ -139,8 +147,7 @@ function buildMathExpression(config) {
         const m = randomInt(2, 8);
         const d = randomInt(2, 6);
         const v = Math.pow(b1, exp1) + (Math.pow(b2, exp2) * m) / d;
-        if (Math.abs(v - Math.round(v)) > 0.001) return null;
-        return { q: `${e1} + ${e2} × ${m} / ${d}`, v: Math.round(v) };
+        return { q: `${e1} + ${e2} × ${m} / ${d}`, v: normalizeAnswer(v, true) };
       },
       () => {
         const b = randomInt(2, 5);
@@ -150,7 +157,10 @@ function buildMathExpression(config) {
         const quo = randomInt(2, 12);
         const num = denom * quo;
         const add = randomInt(1, 15);
-        return { q: `${num} / (${b}^2 − ${sub}) + ${add}`, v: quo + add };
+        return {
+          q: `${num} / (${b}^2 − ${sub}) + ${add}`,
+          v: normalizeAnswer(quo + add, true),
+        };
       },
       () => {
         const e1 = randomExponent();
@@ -158,14 +168,17 @@ function buildMathExpression(config) {
         const [b1, exp1] = e1.split("^").map(Number);
         const [b2, exp2] = e2.split("^").map(Number);
         const add = randomInt(1, 25);
-        return { q: `${e1} + ${e2} + ${add}`, v: Math.pow(b1, exp1) + Math.pow(b2, exp2) + add };
+        return {
+          q: `${e1} + ${e2} + ${add}`,
+          v: normalizeAnswer(Math.pow(b1, exp1) + Math.pow(b2, exp2) + add, true),
+        };
       },
     ];
     for (let i = 0; i < 15; i++) {
       const fn = templates[randomInt(0, templates.length - 1)];
       const r = fn();
       if (r && r.v >= 2 && r.v <= 500) {
-        return { question: r.q, answer: Math.round(r.v) };
+        return { question: r.q, answer: normalizeAnswer(r.v, true) };
       }
     }
   }
@@ -175,13 +188,13 @@ function buildMathExpression(config) {
   const c = randomInt(2, 10);
   const d = randomInt(10, 60);
   const v = a - b * c + d;
-  return { question: `${a} − ${b} × ${c} + ${d}`, answer: Math.round(v) };
+  return { question: `${a} − ${b} × ${c} + ${d}`, answer: normalizeAnswer(v, allowDecimal) };
 }
 
 export function generateQuestion(grade = getGrade()) {
   const config = getDifficultyConfig(grade);
   const result = buildMathExpression(config);
-  const answer = Math.round(result.answer);
+  const answer = result.answer;
   if (answer < 2 || answer > 999) return generateQuestion(grade);
   return { question: result.question, answer };
 }

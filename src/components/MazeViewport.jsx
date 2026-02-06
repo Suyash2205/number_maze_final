@@ -96,6 +96,11 @@ const labelPositionClass = (direction) => {
   }
 };
 
+const formatAnswerLabel = (value) => {
+  if (value == null) return "";
+  return Number.isInteger(value) ? String(value) : value.toFixed(1);
+};
+
 export default function MazeViewport({
   onReachExit = () => {},
   onAnswer = () => {},
@@ -515,7 +520,7 @@ export default function MazeViewport({
                                 type="button"
                                 onClick={() => handleAdvance(edge)}
                               >
-                                {edge.answerNumber}
+                                {formatAnswerLabel(edge.answerNumber)}
                               </button>
                             );
                           })
