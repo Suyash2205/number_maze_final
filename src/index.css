@@ -152,6 +152,77 @@ body::before {
   padding: 24px 16px 32px;
 }
 
+@media (max-width: 640px) {
+  :root {
+    --topbar-height: 84px;
+  }
+
+  .game-topbar {
+    height: var(--topbar-height);
+    padding: 8px 10px 10px;
+    align-items: flex-start;
+  }
+
+  .topbar-content {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .topbar-left {
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .topbar-back {
+    padding: 6px 10px;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+  }
+
+  .game-title {
+    font-size: 0.8rem;
+    line-height: 1.1;
+  }
+
+  .game-mode {
+    font-size: 0.65rem;
+    letter-spacing: 0.16em;
+  }
+
+  .timer-stack {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .timer-chip {
+    padding: 4px 10px;
+    font-size: 0.75rem;
+  }
+
+  .game-stage {
+    align-items: center;
+    padding: 10px 10px 16px;
+  }
+
+  .maze-shell {
+    width: min(86vmin, 520px);
+    height: min(86vmin, 520px);
+  }
+
+  .maze-question {
+    font-size: 0.95rem;
+  }
+
+  .maze-cell-label,
+  .maze-path-label {
+    font-size: 0.7rem;
+  }
+}
+
 .exit-confirm-overlay {
   position: fixed;
   inset: 0;
@@ -377,6 +448,8 @@ body::before {
   text-transform: uppercase;
   color: #f4fdff;
   text-shadow: 0 2px 6px rgba(3, 12, 14, 0.6);
+  line-height: 1.1;
+  padding: 0 2px;
 }
 
 .maze-cell-label {
@@ -570,6 +643,15 @@ body::before {
   pointer-events: none;
   transition: left var(--move-duration, 0ms) ease,
     top var(--move-duration, 0ms) ease;
+}
+
+@media (max-width: 640px) {
+  .maze-avatar {
+    width: 7px;
+    height: 7px;
+    box-shadow: 0 0 0 2px rgba(255, 200, 140, 0.2),
+      0 4px 10px rgba(0, 0, 0, 0.3);
+  }
 }
 
 .maze-exit-gap {
@@ -941,5 +1023,58 @@ body::before {
 
   .maze-shell {
     max-width: 860px;
+  }
+}
+
+@media (max-width: 640px) {
+  .maze-question {
+    font-size: clamp(0.6rem, 2.2vw, 0.9rem);
+    letter-spacing: 0.02em;
+    line-height: 1.05;
+  }
+
+  .maze-cell-label,
+  .maze-path-label {
+    font-size: 0.7rem;
+  }
+
+  .maze-cell {
+    padding: 4px;
+  }
+
+  .maze-cell-label.pos-n {
+    top: -18px;
+  }
+
+  .maze-cell-label.pos-s {
+    bottom: -18px;
+  }
+
+  .maze-cell-label.pos-e {
+    right: -18px;
+  }
+
+  .maze-cell-label.pos-w {
+    left: -18px;
+  }
+
+  .maze-cell-label.pos-ne {
+    top: -14px;
+    right: -14px;
+  }
+
+  .maze-cell-label.pos-nw {
+    top: -14px;
+    left: -14px;
+  }
+
+  .maze-cell-label.pos-se {
+    bottom: -14px;
+    right: -14px;
+  }
+
+  .maze-cell-label.pos-sw {
+    bottom: -14px;
+    left: -14px;
   }
 }

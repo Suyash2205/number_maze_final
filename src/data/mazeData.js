@@ -265,8 +265,8 @@ const buildBaseCells = (exitCellId) =>
   });
 
 const generateMazeOnce = (exitCellId) => {
-  const minLength = randomInt(8, 11);
-  const maxLength = Math.max(minLength + 2, randomInt(12, 16));
+  const minLength = 12;
+  const maxLength = 12;
   const solutionPath = generateSolutionPath({
     minLength,
     maxLength,

@@ -78,7 +78,7 @@ function buildMathExpression(config) {
       const q = randomInt(1, Math.floor(cap / d));
       const a = q * d;
       const b = randomInt(1, 50);
-      return { question: `(${a} ÷ ${d}) + ${b}`, answer: q + b };
+      return { question: `(${a} / ${d}) + ${b}`, answer: q + b };
     }
     const a = randomInt(1, 30);
     const b = randomInt(2, 10);
@@ -115,7 +115,7 @@ function buildMathExpression(config) {
     const c = randomInt(1, 50);
     const d = randomInt(2, 8);
     const v = Math.floor(a / b) + c * d;
-    return { question: `(${a} ÷ ${b}) + ${c} × ${d}`, answer: v };
+    return { question: `(${a} / ${b}) + ${c} × ${d}`, answer: v };
   }
 
   if (ops === 4 && allowExponent && allowFractions) {
@@ -140,7 +140,7 @@ function buildMathExpression(config) {
         const d = randomInt(2, 6);
         const v = Math.pow(b1, exp1) + (Math.pow(b2, exp2) * m) / d;
         if (Math.abs(v - Math.round(v)) > 0.001) return null;
-        return { q: `${e1} + ${e2} × ${m} ÷ ${d}`, v: Math.round(v) };
+        return { q: `${e1} + ${e2} × ${m} / ${d}`, v: Math.round(v) };
       },
       () => {
         const b = randomInt(2, 5);
@@ -150,7 +150,7 @@ function buildMathExpression(config) {
         const quo = randomInt(2, 12);
         const num = denom * quo;
         const add = randomInt(1, 15);
-        return { q: `${num} ÷ (${b}^2 − ${sub}) + ${add}`, v: quo + add };
+        return { q: `${num} / (${b}^2 − ${sub}) + ${add}`, v: quo + add };
       },
       () => {
         const e1 = randomExponent();
