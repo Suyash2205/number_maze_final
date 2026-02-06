@@ -10,7 +10,7 @@ const SCORE_CONFIG = {
   maxTimeScore: 100,
   timePenaltyFactor: 0.5,
   correctAnswerPoints: 10,
-  wrongAnswerPenalty: -5,
+  wrongAnswerTimePenaltySeconds: 5,
   perfectBonus: 25,
 };
 
@@ -79,9 +79,9 @@ export default function GameView({ onBackToHome, onPlayAgain }) {
         return next;
       });
     } else {
-      setScore((s) => Math.max(0, s + SCORE_CONFIG.wrongAnswerPenalty));
       setWrongAnswers((w) => w + 1);
       setCurrentStreak(0);
+      setElapsedSeconds((t) => t + SCORE_CONFIG.wrongAnswerTimePenaltySeconds);
     }
   };
 
