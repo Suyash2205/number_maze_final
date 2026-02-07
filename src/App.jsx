@@ -1,19 +1,13 @@
 import { useState, lazy, Suspense } from "react";
 import GradeSelectPage from "./components/GradeSelectPage.jsx";
 import HowToPlayPage from "./components/HowToPlayPage.jsx";
+import OperationSelectPage from "./components/OperationSelectPage.jsx";
 
 const GameView = lazy(() => import("./components/GameView.jsx"));
 const HOW_TO_PLAY_KEY = "number-path-runner-howto-seen";
 
 export default function App() {
-  const [view, setView] = useState(() => {
-    try {
-      const seen = localStorage.getItem(HOW_TO_PLAY_KEY);
-      return "grade-select";
-    } catch {
-      return "grade-select";
-    }
-  });
+  const [view, setView] = useState("operation-select");
   const [showHowTo, setShowHowTo] = useState(() => {
     try {
       const seen = localStorage.getItem(HOW_TO_PLAY_KEY);
@@ -33,11 +27,16 @@ export default function App() {
     setShowHowTo(false);
   };
 
+  if (view === "operation-select") {
+    return <OperationSelectPage onContinue={() => setView("grade-select")} />;
+  }
+
   if (view === "grade-select") {
     return (
       <GradeSelectPage
         onStart={() => setView("maze")}
         onHowToPlay={() => setShowHowTo(true)}
+        onBack={() => setView("operation-select")}
         howToPlayOpen={showHowTo}
         howToPlayContent={
           <HowToPlayPage onContinue={handleCloseHowTo} isModal />

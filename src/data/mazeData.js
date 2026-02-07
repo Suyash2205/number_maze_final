@@ -21,7 +21,7 @@
  * @property {boolean} isCorrectEdge
  */
 
-import { generateQuestions, getGrade } from "./questionGenerator.js";
+import { generateQuestions, getGrade, getOperation } from "./questionGenerator.js";
 
 const gridSize = 5;
 
@@ -534,8 +534,8 @@ const buildFallbackMaze = (exitCellId) => {
   return { cells, paths, solutionPath };
 };
 
-const applyQuestionsToCells = (cells, grade) => {
-  const generatedQuestions = generateQuestions(gridSize * gridSize, grade);
+const applyQuestionsToCells = (cells, grade, operation) => {
+  const generatedQuestions = generateQuestions(gridSize * gridSize, grade, operation);
   cells.forEach((cell, index) => {
     const questionData = generatedQuestions[index];
     cell.question = questionData.question;
@@ -634,10 +634,10 @@ const assignAnswerNumbers = (cells, paths, solutionPath) => {
   });
 };
 
-export const createMaze = ({ grade = getGrade() } = {}) => {
+export const createMaze = ({ grade = getGrade(), operation = getOperation() } = {}) => {
   const exitCellId = pickRandomExitCellId();
   const maze = generateMazeWithRetries(exitCellId) || buildFallbackMaze(exitCellId);
-  applyQuestionsToCells(maze.cells, grade);
+  applyQuestionsToCells(maze.cells, grade, operation);
   markDeadEnds(maze.cells, maze.paths);
   assignAnswerNumbers(maze.cells, maze.paths, maze.solutionPath);
 

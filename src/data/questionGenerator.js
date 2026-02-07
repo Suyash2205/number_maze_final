@@ -4,6 +4,8 @@
  */
 
 const GRADE_STORAGE_KEY = "number-path-runner-grade";
+const OPERATION_STORAGE_KEY = "number-path-runner-operation";
+const AVAILABLE_OPERATIONS = ["mixed", "add", "sub", "mul", "div", "fraction"];
 
 function randomInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -27,6 +29,23 @@ export function getGrade() {
 export function setGrade(grade) {
   try {
     localStorage.setItem(GRADE_STORAGE_KEY, String(grade));
+  } catch {
+    /* ignore */
+  }
+}
+
+export function getOperation() {
+  try {
+    const stored = localStorage.getItem(OPERATION_STORAGE_KEY);
+    return AVAILABLE_OPERATIONS.includes(stored) ? stored : "mixed";
+  } catch {
+    return "mixed";
+  }
+}
+
+export function setOperation(operation) {
+  try {
+    localStorage.setItem(OPERATION_STORAGE_KEY, operation);
   } catch {
     /* ignore */
   }
@@ -61,9 +80,86 @@ function randomFraction() {
   return `${n}/${d}`;
 }
 
-function buildMathExpression(config) {
+function buildMathExpression(config, operation) {
   const { max, ops, allowNegative, allowDecimal, allowExponent, allowFractions } = config;
   const cap = Math.min(max, ops >= 4 ? 500 : ops >= 3 ? 200 : ops >= 2 ? 100 : 50);
+  const opCount = Math.max(1, ops);
+
+  if (operation === "fraction") {
+    const templates = [
+      () => {
+        const f1 = randomFraction();
+        const f2 = randomFraction();
+        const [n1, d1] = f1.split("/").map(Number);
+        const [n2, d2] = f2.split("/").map(Number);
+        const mult = d1 * d2;
+        const sum = (n1 * d2 + n2 * d1) / mult;
+        const v = sum * mult;
+        if (v < 2) return null;
+        return { q: `(${f1} + ${f2}) × ${mult}`, v: normalizeAnswer(v, true) };
+      },
+      () => {
+        const f1 = randomFraction();
+        const f2 = randomFraction();
+        const [n1, d1] = f1.split("/").map(Number);
+        const [n2, d2] = f2.split("/").map(Number);
+        const mult = d1 * d2;
+        const diff = (n1 * d2 - n2 * d1) / mult;
+        const v = diff * mult;
+        if (v < 2) return null;
+        return { q: `(${f1} − ${f2}) × ${mult}`, v: normalizeAnswer(v, true) };
+      },
+      () => {
+        const f = randomFraction();
+        const [n, d] = f.split("/").map(Number);
+        const mult = randomInt(2, 10);
+        return { q: `${f} × ${mult}`, v: normalizeAnswer((n * mult) / d, true) };
+      },
+    ];
+    for (let i = 0; i < 15; i++) {
+      const fn = templates[randomInt(0, templates.length - 1)];
+      const r = fn();
+      if (r && r.v >= 2 && r.v <= 500) {
+        return { question: r.q, answer: normalizeAnswer(r.v, true) };
+      }
+    }
+  }
+
+  if (operation === "mixed") {
+    // fall through to the original mixed-ops generator
+  }
+
+  if (operation === "add") {
+    const count = Math.max(2, opCount);
+    const parts = Array.from({ length: count }, () => randomInt(1, cap));
+    const v = parts.reduce((sum, value) => sum + value, 0);
+    return { question: parts.join(" + "), answer: normalizeAnswer(v, allowDecimal) };
+  }
+
+  if (operation === "sub") {
+    const count = Math.max(2, opCount);
+    const parts = Array.from({ length: count }, () => randomInt(1, cap));
+    const v = parts.slice(1).reduce((sum, value) => sum - value, parts[0]);
+    return { question: parts.join(" − "), answer: normalizeAnswer(v, allowDecimal) };
+  }
+
+  if (operation === "mul") {
+    const count = Math.max(2, opCount);
+    const parts = Array.from({ length: count }, () => randomInt(2, 12));
+    const v = parts.reduce((prod, value) => prod * value, 1);
+    return { question: parts.join(" × "), answer: normalizeAnswer(v, allowDecimal) };
+  }
+
+  if (operation === "div") {
+    const count = Math.max(2, opCount);
+    const divisor = randomInt(2, 12);
+    const q = randomInt(2, Math.floor(cap / divisor));
+    const a = q * divisor;
+    const rest = Array.from({ length: count - 1 }, () => randomInt(2, 12));
+    const expr = [a, divisor, ...rest].join(" / ");
+    const v = rest.reduce((acc, value) => acc / value, a / divisor);
+    return { question: expr, answer: normalizeAnswer(v, true) };
+  }
 
   if (ops === 1) {
     const opList = ["+", "−", "×"];
@@ -193,14 +289,24 @@ function buildMathExpression(config) {
 
 export function generateQuestion(grade = getGrade()) {
   const config = getDifficultyConfig(grade);
-  const result = buildMathExpression(config);
+  const operation = getOperation();
+  const result = buildMathExpression(config, operation);
   const answer = result.answer;
   if (answer < 2 || answer > 999) return generateQuestion(grade);
   return { question: result.question, answer };
 }
 
-export function generateQuestions(count, grade = getGrade()) {
+export function generateQuestions(count, grade = getGrade(), operation = getOperation()) {
   const out = [];
-  for (let i = 0; i < count; i++) out.push(generateQuestion(grade));
+  for (let i = 0; i < count; i++) {
+    const config = getDifficultyConfig(grade);
+    const result = buildMathExpression(config, operation);
+    const answer = result.answer;
+    if (answer < 2 || answer > 999) {
+      i -= 1;
+      continue;
+    }
+    out.push({ question: result.question, answer });
+  }
   return out;
 }

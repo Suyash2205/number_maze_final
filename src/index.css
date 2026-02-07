@@ -941,12 +941,29 @@ body::before {
   margin-bottom: 6px;
 }
 
+.grade-select-back {
+  margin: 6px auto 8px;
+  border-radius: 999px;
+  padding: 6px 18px;
+  background: transparent;
+  border: 2px solid rgba(0, 210, 220, 0.45);
+  color: #e9feff;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
 .grade-select-title {
   font-size: 1.45rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   margin: 0 0 8px;
   text-transform: uppercase;
+}
+
+.grade-select-title + .grade-select-subtitle {
+  margin-bottom: 24px;
 }
 
 .grade-select-subtitle {

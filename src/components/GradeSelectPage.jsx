@@ -4,6 +4,7 @@ import { setGrade } from "../data/questionGenerator.js";
 export default function GradeSelectPage({
   onStart,
   onHowToPlay,
+  onBack,
   howToPlayOpen = false,
   howToPlayContent = null,
 }) {
@@ -27,6 +28,11 @@ export default function GradeSelectPage({
       <div className="grade-select-card">
         <div className="grade-select-logo" aria-hidden="true" />
         <div className="grade-select-kicker">Brain Racers</div>
+        {onBack ? (
+          <button type="button" className="grade-select-back" onClick={onBack}>
+            Back
+          </button>
+        ) : null}
         <h1 className="grade-select-title">Choose Your Grade</h1>
         <p className="grade-select-subtitle">
           We'll adjust the question difficulty for you!
