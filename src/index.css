@@ -1087,10 +1087,11 @@ body::before {
   inset: 0;
   background: rgba(3, 12, 14, 0.6);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   z-index: 30;
   padding: 20px;
+  overflow-y: auto;
 }
 
 .howto-modal {
@@ -1100,6 +1101,8 @@ body::before {
 .howto-card-modal {
   width: 100%;
   margin: 0 auto;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
 }
 
 .howto-badge {
@@ -1175,6 +1178,14 @@ body::before {
 @media (max-width: 640px) {
   .howto-card {
     padding: 22px 20px;
+  }
+
+  .howto-modal-overlay {
+    padding: 12px;
+  }
+
+  .howto-card-modal {
+    max-height: calc(100vh - 24px);
   }
 
   .howto-actions {
