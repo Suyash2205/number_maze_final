@@ -601,7 +601,7 @@ export default function MazeViewport({
             </div>
           ) : null}
 
-          {hasEscaped && gameOverStats ? (
+          {(hasEscaped || isTimeUp) && gameOverStats ? (
             <div className="game-over-overlay" role="status">
               <div className="game-over-card">
                 <h2 className="game-over-title">GAME OVER</h2>

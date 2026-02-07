@@ -102,8 +102,11 @@ export default function GameView({ onBackToHome, onPlayAgain }) {
     );
   };
 
-  const handleReachExit = () => {
-    const finishedAt = elapsedRef.current;
+  const finalizeGame = ({
+    finishedAt,
+    triggerConfetti = false,
+    allowRecordUpdate = true,
+  }) => {
     setIsTimerRunning(false);
     setFinishTime(finishedAt);
     const timeScore = Math.max(
@@ -136,16 +139,18 @@ export default function GameView({ onBackToHome, onPlayAgain }) {
     } else {
       setHighScore(prevHighScore);
     }
-    confetti({
-      particleCount: 100,
-      spread: 70,
-      origin: { x: 0.5, y: 0.5 },
-      colors: ["#e8c547", "#ffd700", "#ffec8b", "#fffacd", "#daa520"],
-    });
+    if (triggerConfetti) {
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { x: 0.5, y: 0.5 },
+        colors: ["#e8c547", "#ffd700", "#ffec8b", "#fffacd", "#daa520"],
+      });
+    }
     const currentBest = recordSeconds != null ? recordSeconds : loadRecord();
     const isNewRecord = currentBest == null || finishedAt < currentBest;
     setFinishIsNewRecord(isNewRecord);
-    if (isNewRecord) {
+    if (allowRecordUpdate && isNewRecord) {
       setRecordSeconds(finishedAt);
       try {
         localStorage.setItem(RECORD_STORAGE_KEY, String(finishedAt));
@@ -154,6 +159,21 @@ export default function GameView({ onBackToHome, onPlayAgain }) {
       }
     }
   };
+
+  const handleReachExit = () => {
+    const finishedAt = elapsedRef.current;
+    finalizeGame({ finishedAt, triggerConfetti: true, allowRecordUpdate: true });
+  };
+
+  useEffect(() => {
+    if (isTimeUp && finalScore == null) {
+      finalizeGame({
+        finishedAt: MAX_TIME_SECONDS,
+        triggerConfetti: false,
+        allowRecordUpdate: false,
+      });
+    }
+  }, [isTimeUp, finalScore]);
 
   const gameOverStats =
     finalScore != null
