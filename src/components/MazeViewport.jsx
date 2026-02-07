@@ -104,6 +104,7 @@ const formatAnswerLabel = (value) => {
 export default function MazeViewport({
   onReachExit = () => {},
   onAnswer = () => {},
+  onDeadEnd = () => {},
   elapsedSeconds = 0,
   timeDisplay = "00:00",
   finishTimeFormatted = null,
@@ -399,6 +400,10 @@ export default function MazeViewport({
     markVisited(currentCellId);
     markVisited(edge.toCellId);
 
+    const willBeDeadEnd =
+      Boolean(toCell?.isDeadEnd) ||
+      (!isCorrectMove && edge.toCellId && !solutionSet.has(edge.toCellId));
+
     if (!isCorrectMove && edge.toCellId && !solutionSet.has(edge.toCellId)) {
       setForcedDeadEnds((prev) => new Set([...prev, edge.toCellId]));
     }
@@ -416,6 +421,9 @@ export default function MazeViewport({
     });
 
     onAnswer(isCorrectMove);
+    if (willBeDeadEnd) {
+      onDeadEnd();
+    }
     setPreviousCellId(currentCellId);
     setCurrentCellId(edge.toCellId);
 

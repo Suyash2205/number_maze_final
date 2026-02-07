@@ -10,7 +10,7 @@ const SCORE_CONFIG = {
   maxTimeScore: 100,
   timePenaltyFactor: 0.5,
   correctAnswerPoints: 10,
-  wrongAnswerTimePenaltySeconds: 5,
+  deadEndTimePenaltySeconds: 5,
   perfectBonus: 25,
 };
 
@@ -81,8 +81,11 @@ export default function GameView({ onBackToHome, onPlayAgain }) {
     } else {
       setWrongAnswers((w) => w + 1);
       setCurrentStreak(0);
-      setElapsedSeconds((t) => t + SCORE_CONFIG.wrongAnswerTimePenaltySeconds);
     }
+  };
+
+  const handleDeadEnd = () => {
+    setElapsedSeconds((t) => t + SCORE_CONFIG.deadEndTimePenaltySeconds);
   };
 
   const handleReachExit = () => {
@@ -179,6 +182,7 @@ export default function GameView({ onBackToHome, onPlayAgain }) {
         <MazeViewport
           onReachExit={handleReachExit}
           onAnswer={handleAnswer}
+          onDeadEnd={handleDeadEnd}
           elapsedSeconds={elapsedSeconds}
           timeDisplay={timeDisplay}
           finishTimeFormatted={finishTime != null ? formatTime(finishTime) : null}
