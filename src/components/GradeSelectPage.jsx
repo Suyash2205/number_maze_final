@@ -1,7 +1,12 @@
 import { useState, useCallback } from "react";
 import { setGrade } from "../data/questionGenerator.js";
 
-export default function GradeSelectPage({ onStart }) {
+export default function GradeSelectPage({
+  onStart,
+  onHowToPlay,
+  howToPlayOpen = false,
+  howToPlayContent = null,
+}) {
   const [selectedGrade, setSelectedGrade] = useState(null);
 
   const handleSelect = useCallback((grade) => {
@@ -45,7 +50,19 @@ export default function GradeSelectPage({ onStart }) {
         >
           Start Game
         </button>
+        <button
+          type="button"
+          className="grade-select-howto"
+          onClick={onHowToPlay}
+        >
+          How to Play
+        </button>
       </div>
+      {howToPlayOpen ? (
+        <div className="howto-modal-overlay" role="dialog" aria-modal="true">
+          <div className="howto-modal">{howToPlayContent}</div>
+        </div>
+      ) : null}
     </div>
   );
 }
