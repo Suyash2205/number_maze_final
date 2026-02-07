@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { setGrade } from "../data/questionGenerator.js";
 
 export default function GradeSelectPage({
@@ -22,6 +22,15 @@ export default function GradeSelectPage({
     setGrade(selectedGrade);
     onStart();
   }, [selectedGrade, onStart]);
+
+  useEffect(() => {
+    if (howToPlayOpen) {
+      document.body.classList.add("modal-open");
+    } else {
+      document.body.classList.remove("modal-open");
+    }
+    return () => document.body.classList.remove("modal-open");
+  }, [howToPlayOpen]);
 
   return (
     <div className="grade-select-page">

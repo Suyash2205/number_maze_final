@@ -32,6 +32,10 @@ body {
   overflow-x: hidden;
 }
 
+body.modal-open {
+  overflow: hidden;
+}
+
 #root {
   min-height: 100vh;
   position: relative;
