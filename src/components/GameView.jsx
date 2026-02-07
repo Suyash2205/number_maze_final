@@ -13,6 +13,7 @@ const SCORE_CONFIG = {
   deadEndTimePenaltySeconds: 5,
   perfectBonus: 25,
 };
+const MAX_TIME_SECONDS = 180;
 
 const formatTime = (totalSeconds) => {
   const minutes = Math.floor(totalSeconds / 60);
@@ -54,6 +55,7 @@ export default function GameView({ onBackToHome, onPlayAgain }) {
   const [highScore, setHighScore] = useState(loadHighScore);
   const [isNewHighScore, setIsNewHighScore] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const [isTimeUp, setIsTimeUp] = useState(false);
   const elapsedRef = useRef(0);
   const scoreRef = useRef(0);
   const correctRef = useRef(0);
@@ -65,9 +67,19 @@ export default function GameView({ onBackToHome, onPlayAgain }) {
 
   useEffect(() => {
     if (!isTimerRunning) return undefined;
-    const timer = setInterval(() => setElapsedSeconds((p) => p + 1), 1000);
+    const timer = setInterval(
+      () => setElapsedSeconds((p) => Math.min(p + 1, MAX_TIME_SECONDS)),
+      1000
+    );
     return () => clearInterval(timer);
   }, [isTimerRunning]);
+
+  useEffect(() => {
+    if (elapsedSeconds >= MAX_TIME_SECONDS && !isTimeUp) {
+      setIsTimerRunning(false);
+      setIsTimeUp(true);
+    }
+  }, [elapsedSeconds, isTimeUp]);
 
   const handleAnswer = (isCorrect) => {
     if (isCorrect) {
@@ -85,7 +97,9 @@ export default function GameView({ onBackToHome, onPlayAgain }) {
   };
 
   const handleDeadEnd = () => {
-    setElapsedSeconds((t) => t + SCORE_CONFIG.deadEndTimePenaltySeconds);
+    setElapsedSeconds((t) =>
+      Math.min(t + SCORE_CONFIG.deadEndTimePenaltySeconds, MAX_TIME_SECONDS)
+    );
   };
 
   const handleReachExit = () => {
@@ -158,7 +172,7 @@ export default function GameView({ onBackToHome, onPlayAgain }) {
         }
       : null;
 
-  const timeDisplay = formatTime(elapsedSeconds);
+  const timeDisplay = formatTime(Math.max(0, MAX_TIME_SECONDS - elapsedSeconds));
   const recordDisplay = recordSeconds != null ? formatTime(recordSeconds) : null;
 
   const handleRequestExit = () => setShowExitConfirm(true);
@@ -183,6 +197,7 @@ export default function GameView({ onBackToHome, onPlayAgain }) {
           onReachExit={handleReachExit}
           onAnswer={handleAnswer}
           onDeadEnd={handleDeadEnd}
+          isTimeUp={isTimeUp}
           elapsedSeconds={elapsedSeconds}
           timeDisplay={timeDisplay}
           finishTimeFormatted={finishTime != null ? formatTime(finishTime) : null}

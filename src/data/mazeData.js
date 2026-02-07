@@ -438,28 +438,78 @@ const generateMazeWithRetries = (exitCellId, attempts = 30) => {
   return null;
 };
 
+const generateFallbackPath = ({ exitCellId, targetLength }) => {
+  const start = startCellId;
+  const maxAttempts = 300;
+
+  const attempt = () => {
+    const visited = new Set([start]);
+    const path = [start];
+
+    const dfs = (currentId) => {
+      if (path.length === targetLength) {
+        return currentId === exitCellId;
+      }
+      const { x, y } = cellCoords(currentId);
+      const { x: ex, y: ey } = cellCoords(exitCellId);
+      const remaining = targetLength - path.length;
+      const minStepsToExit = Math.max(Math.abs(ex - x), Math.abs(ey - y));
+      if (minStepsToExit > remaining) {
+        return false;
+      }
+      const neighbors = shuffle(neighborCandidates(x, y, allDirections));
+      for (const neighbor of neighbors) {
+        const nextId = cellId(neighbor.x, neighbor.y);
+        if (visited.has(nextId)) continue;
+        visited.add(nextId);
+        path.push(nextId);
+        if (dfs(nextId)) {
+          return true;
+        }
+        path.pop();
+        visited.delete(nextId);
+      }
+      return false;
+    };
+
+    return dfs(start) ? path : null;
+  };
+
+  for (let i = 0; i < maxAttempts; i += 1) {
+    const result = attempt();
+    if (result) {
+      return result;
+    }
+  }
+
+  return null;
+};
+
 const buildFallbackMaze = (exitCellId) => {
   const cells = buildBaseCells(exitCellId);
   /** @type {Path[]} */
   const paths = [];
-  const solutionPath = [startCellId];
+  const fallbackTargetLength = 12;
+  const solutionPath =
+    generateFallbackPath({ exitCellId, targetLength: fallbackTargetLength }) || [startCellId];
   const start = cellCoords(startCellId);
   const exit = cellCoords(exitCellId);
-  let x = start.x;
-  let y = start.y;
-
-  while (x !== exit.x || y !== exit.y) {
-    const dx = exit.x - x;
-    const dy = exit.y - y;
-    if (dx !== 0 && dy !== 0) {
-      x += Math.sign(dx);
-      y += Math.sign(dy);
-    } else if (dx !== 0) {
-      x += Math.sign(dx);
-    } else {
-      y += Math.sign(dy);
+  if (solutionPath.length === 1 && startCellId !== exitCellId) {
+    let x = start.x;
+    let y = start.y;
+    while (x !== exit.x || y !== exit.y) {
+      const dx = exit.x - x;
+      const dy = exit.y - y;
+      if (dx !== 0 && dy !== 0) {
+        x += Math.sign(dx);
+        y += Math.sign(dy);
+      } else if (dx !== 0) {
+        x += Math.sign(dx);
+      } else {
+        y += Math.sign(dy);
+      }
+      solutionPath.push(cellId(x, y));
     }
-    solutionPath.push(cellId(x, y));
   }
 
   const addEdge = ({ fromId, toId, isCorrectEdge }) => {

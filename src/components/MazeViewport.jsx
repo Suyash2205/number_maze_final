@@ -105,6 +105,7 @@ export default function MazeViewport({
   onReachExit = () => {},
   onAnswer = () => {},
   onDeadEnd = () => {},
+  isTimeUp = false,
   elapsedSeconds = 0,
   timeDisplay = "00:00",
   finishTimeFormatted = null,
@@ -261,12 +262,12 @@ export default function MazeViewport({
   };
 
   const visibleSet = useMemo(() => {
-    const set = new Set([currentCellId, ...currentNeighbors]);
+    const set = new Set([currentCellId, ...currentNeighbors, ...visitedCells]);
     if (previousCellId) {
       set.add(previousCellId);
     }
     return set;
-  }, [currentCellId, currentNeighbors, previousCellId]);
+  }, [currentCellId, currentNeighbors, previousCellId, visitedCells]);
   const isVisible = (cellId) => revealAll || visibleSet.has(cellId);
   const isRevealed = (cellId) => isVisible(cellId);
 
@@ -354,9 +355,10 @@ export default function MazeViewport({
       isGameOver,
     });
 
-    if (isMoving || hasEscaped) {
+    if (isMoving || hasEscaped || isTimeUp) {
       if (isMoving) console.log("blocked: isMoving");
       if (hasEscaped) console.log("blocked: hasEscaped");
+      if (isTimeUp) console.log("blocked: time up");
       return;
     }
     if (!edge || edge.fromCellId !== currentCellId) {
@@ -438,9 +440,10 @@ export default function MazeViewport({
   };
 
   const handleBacktrack = (cellId) => {
-    if (isMoving || hasEscaped || !canBacktrackTo(cellId)) {
+    if (isMoving || hasEscaped || isTimeUp || !canBacktrackTo(cellId)) {
       if (isMoving) console.log("blocked: isMoving");
       if (hasEscaped) console.log("blocked: hasEscaped");
+      if (isTimeUp) console.log("blocked: time up");
       if (!canBacktrackTo(cellId)) console.log("blocked: not adjacent/visited");
       return;
     }
@@ -495,12 +498,14 @@ export default function MazeViewport({
           >
             {sortedCells.map((cell) => {
               const isCurrent = cell.id === currentCellId;
+              const isPrevious = cell.id === previousCellId;
               return (
                 <div
                   key={cell.id}
                   className={`maze-cell${cell.isExit ? " is-exit" : ""}${
                     isCurrent ? " is-current" : ""
-                  }${isVisited(cell.id) ? " is-visited" : ""}${
+                  }${isPrevious ? " is-previous" : ""}${
+                    isVisited(cell.id) ? " is-visited" : ""}${
                     isSolved(cell.id) ? " is-solved" : ""
                   }${cell.isDeadEnd ? " is-dead-end" : ""}${
                     canBacktrackTo(cell.id) ? " is-clickable" : ""
@@ -509,7 +514,20 @@ export default function MazeViewport({
                   }${revealAll ? " is-revealed" : ""}`}
                   onClick={() => handleBacktrack(cell.id)}
                 >
-                  <span className="maze-question">{cell.question}</span>
+                  {(() => {
+                    const questionLength = cell.question?.length || 0;
+                    const questionSizeClass =
+                      questionLength >= 20
+                        ? " is-very-long"
+                        : questionLength >= 14
+                          ? " is-long"
+                          : "";
+                    return (
+                      <span className={`maze-question${questionSizeClass}`}>
+                        {cell.question}
+                      </span>
+                    );
+                  })()}
 
                   {cell.isExit ? (
                     <span className="maze-exit-gap" aria-hidden="true" />
