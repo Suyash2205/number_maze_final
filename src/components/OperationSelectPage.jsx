@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { setOperation, getOperation } from "../data/questionGenerator.js";
 
 const OPTIONS = [
@@ -10,13 +10,27 @@ const OPTIONS = [
   { id: "fraction", label: "Fractions" },
 ];
 
-export default function OperationSelectPage({ onContinue }) {
+export default function OperationSelectPage({
+  onContinue,
+  onHowToPlay,
+  howToPlayOpen = false,
+  howToPlayContent = null,
+}) {
   const [selected, setSelected] = useState(getOperation);
 
   const handleSelect = useCallback((id) => {
     setOperation(id);
     setSelected(id);
   }, []);
+
+  useEffect(() => {
+    if (howToPlayOpen) {
+      document.body.classList.add("modal-open");
+    } else {
+      document.body.classList.remove("modal-open");
+    }
+    return () => document.body.classList.remove("modal-open");
+  }, [howToPlayOpen]);
 
   return (
     <div className="grade-select-page">
@@ -41,12 +55,25 @@ export default function OperationSelectPage({ onContinue }) {
         </div>
         <button
           type="button"
-          className="grade-select-start is-ready"
+          key={selected || "op-continue"}
+          className={`grade-select-start${selected ? " is-ready" : ""}`}
           onClick={onContinue}
         >
           Continue
         </button>
+        <button
+          type="button"
+          className="grade-select-howto"
+          onClick={onHowToPlay}
+        >
+          How to Play
+        </button>
       </div>
+      {howToPlayOpen ? (
+        <div className="howto-modal-overlay" role="dialog" aria-modal="true">
+          <div className="howto-modal">{howToPlayContent}</div>
+        </div>
+      ) : null}
     </div>
   );
 }

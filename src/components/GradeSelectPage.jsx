@@ -1,13 +1,7 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { setGrade } from "../data/questionGenerator.js";
 
-export default function GradeSelectPage({
-  onStart,
-  onHowToPlay,
-  onBack,
-  howToPlayOpen = false,
-  howToPlayContent = null,
-}) {
+export default function GradeSelectPage({ onStart, onBack }) {
   const [selectedGrade, setSelectedGrade] = useState(null);
 
   const handleSelect = useCallback((grade) => {
@@ -22,15 +16,6 @@ export default function GradeSelectPage({
     setGrade(selectedGrade);
     onStart();
   }, [selectedGrade, onStart]);
-
-  useEffect(() => {
-    if (howToPlayOpen) {
-      document.body.classList.add("modal-open");
-    } else {
-      document.body.classList.remove("modal-open");
-    }
-    return () => document.body.classList.remove("modal-open");
-  }, [howToPlayOpen]);
 
   return (
     <div className="grade-select-page">
@@ -60,24 +45,13 @@ export default function GradeSelectPage({
         </div>
         <button
           type="button"
+          key={selectedGrade || "grade-start"}
           className={`grade-select-start${selectedGrade ? " is-ready" : ""}`}
           onClick={handleStart}
         >
           Start Game
         </button>
-        <button
-          type="button"
-          className="grade-select-howto"
-          onClick={onHowToPlay}
-        >
-          How to Play
-        </button>
       </div>
-      {howToPlayOpen ? (
-        <div className="howto-modal-overlay" role="dialog" aria-modal="true">
-          <div className="howto-modal">{howToPlayContent}</div>
-        </div>
-      ) : null}
     </div>
   );
 }

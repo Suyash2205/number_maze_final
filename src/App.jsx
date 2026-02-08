@@ -28,19 +28,21 @@ export default function App() {
   };
 
   if (view === "operation-select") {
-    return <OperationSelectPage onContinue={() => setView("grade-select")} />;
+    return (
+      <OperationSelectPage
+        onContinue={() => setView("grade-select")}
+        onHowToPlay={() => setShowHowTo(true)}
+        howToPlayOpen={showHowTo}
+        howToPlayContent={<HowToPlayPage onContinue={handleCloseHowTo} isModal />}
+      />
+    );
   }
 
   if (view === "grade-select") {
     return (
       <GradeSelectPage
         onStart={() => setView("maze")}
-        onHowToPlay={() => setShowHowTo(true)}
         onBack={() => setView("operation-select")}
-        howToPlayOpen={showHowTo}
-        howToPlayContent={
-          <HowToPlayPage onContinue={handleCloseHowTo} isModal />
-        }
       />
     );
   }

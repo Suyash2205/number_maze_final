@@ -11,9 +11,31 @@ function randomInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+function getOperandRange(max, ops, type) {
+  if (type === "mul" || type === "div") {
+    if (ops >= 4) return max >= 5000 ? 50 : max >= 1000 ? 40 : 30;
+    if (ops >= 3) return max >= 5000 ? 40 : max >= 1000 ? 30 : 25;
+    if (ops >= 2) return max >= 5000 ? 30 : max >= 1000 ? 24 : 20;
+    return 12;
+  }
+  if (ops >= 4) return max >= 5000 ? 2000 : max >= 1000 ? 1200 : 700;
+  if (ops >= 3) return max >= 5000 ? 1500 : max >= 1000 ? 900 : 500;
+  if (ops >= 2) return max >= 5000 ? 900 : max >= 1000 ? 600 : 350;
+  return max >= 500 ? 200 : 120;
+}
+
 function normalizeAnswer(value, allowDecimal) {
   const rounded = allowDecimal ? Math.round(value * 10) / 10 : Math.round(value);
   return Number.isFinite(rounded) ? rounded : value;
+}
+
+function buildGroupedExpression(parts, op, groupSize = 2) {
+  const groups = [];
+  for (let i = 0; i < parts.length; i += groupSize) {
+    const slice = parts.slice(i, i + groupSize);
+    groups.push(slice.length > 1 ? `(${slice.join(` ${op} `)})` : `${slice[0]}`);
+  }
+  return groups.join(` ${op} `);
 }
 
 export function getGrade() {
@@ -74,9 +96,9 @@ function randomExponent() {
   return `${base}^${exp}`;
 }
 
-function randomFraction() {
-  const n = randomInt(1, 9);
-  const d = randomInt(2, 10);
+function randomFraction(maxDenom = 10) {
+  const n = randomInt(1, Math.max(3, Math.floor(maxDenom * 0.8)));
+  const d = randomInt(2, maxDenom);
   return `${n}/${d}`;
 }
 
@@ -86,10 +108,14 @@ function buildMathExpression(config, operation) {
   const opCount = Math.max(1, ops);
 
   if (operation === "fraction") {
+    const denomMax =
+      ops >= 4 ? 20 : ops >= 3 ? 16 : ops >= 2 ? 12 : 10;
+    const multiplierMax =
+      ops >= 4 ? 25 : ops >= 3 ? 18 : ops >= 2 ? 12 : 10;
     const templates = [
       () => {
-        const f1 = randomFraction();
-        const f2 = randomFraction();
+        const f1 = randomFraction(denomMax);
+        const f2 = randomFraction(denomMax);
         const [n1, d1] = f1.split("/").map(Number);
         const [n2, d2] = f2.split("/").map(Number);
         const mult = d1 * d2;
@@ -99,8 +125,8 @@ function buildMathExpression(config, operation) {
         return { q: `(${f1} + ${f2}) × ${mult}`, v: normalizeAnswer(v, true) };
       },
       () => {
-        const f1 = randomFraction();
-        const f2 = randomFraction();
+        const f1 = randomFraction(denomMax);
+        const f2 = randomFraction(denomMax);
         const [n1, d1] = f1.split("/").map(Number);
         const [n2, d2] = f2.split("/").map(Number);
         const mult = d1 * d2;
@@ -110,10 +136,37 @@ function buildMathExpression(config, operation) {
         return { q: `(${f1} − ${f2}) × ${mult}`, v: normalizeAnswer(v, true) };
       },
       () => {
-        const f = randomFraction();
+        const f = randomFraction(denomMax);
         const [n, d] = f.split("/").map(Number);
-        const mult = randomInt(2, 10);
+        const mult = randomInt(2, multiplierMax);
         return { q: `${f} × ${mult}`, v: normalizeAnswer((n * mult) / d, true) };
+      },
+      () => {
+        const f = randomFraction(denomMax);
+        const [n, d] = f.split("/").map(Number);
+        const add = randomInt(5, multiplierMax);
+        return { q: `${f} + ${add}`, v: normalizeAnswer(n / d + add, true) };
+      },
+      () => {
+        const f1 = randomFraction(denomMax);
+        const f2 = randomFraction(denomMax);
+        const add = randomInt(5, multiplierMax);
+        const [n1, d1] = f1.split("/").map(Number);
+        const [n2, d2] = f2.split("/").map(Number);
+        const mult = d1 * d2;
+        const sum = (n1 * d2 + n2 * d1) / mult;
+        const v = sum * mult + add;
+        if (v < 2) return null;
+        return { q: `(${f1} + ${f2}) × ${mult} + ${add}`, v: normalizeAnswer(v, true) };
+      },
+      () => {
+        const f = randomFraction(denomMax);
+        const mult = randomInt(2, multiplierMax);
+        const sub = randomInt(2, multiplierMax);
+        const [n, d] = f.split("/").map(Number);
+        const v = (n * mult) / d - sub;
+        if (v < 2) return null;
+        return { q: `(${f} × ${mult}) − ${sub}`, v: normalizeAnswer(v, true) };
       },
     ];
     for (let i = 0; i < 15; i++) {
@@ -131,34 +184,83 @@ function buildMathExpression(config, operation) {
 
   if (operation === "add") {
     const count = Math.max(2, opCount);
-    const parts = Array.from({ length: count }, () => randomInt(1, cap));
+    const high = Math.min(cap, getOperandRange(max, ops, "add"));
+    const parts = Array.from({ length: count }, () => randomInt(1, high));
     const v = parts.reduce((sum, value) => sum + value, 0);
-    return { question: parts.join(" + "), answer: normalizeAnswer(v, allowDecimal) };
+    const expr =
+      count >= 4
+        ? buildGroupedExpression(parts, "+", 2)
+        : count >= 3
+          ? buildGroupedExpression(parts, "+", 2)
+          : parts.join(" + ");
+    return { question: expr, answer: normalizeAnswer(v, allowDecimal) };
   }
 
   if (operation === "sub") {
     const count = Math.max(2, opCount);
-    const parts = Array.from({ length: count }, () => randomInt(1, cap));
+    const high = Math.min(cap, getOperandRange(max, ops, "sub"));
+    const parts = Array.from({ length: count }, () => randomInt(1, high));
     const v = parts.slice(1).reduce((sum, value) => sum - value, parts[0]);
-    return { question: parts.join(" − "), answer: normalizeAnswer(v, allowDecimal) };
+    const expr =
+      count >= 4
+        ? `(${parts[0]} − ${parts[1]}) − (${parts[2]} − ${parts[3]})`
+        : count >= 3
+          ? `(${parts[0]} − ${parts[1]}) − ${parts[2]}`
+          : parts.join(" − ");
+    return { question: expr, answer: normalizeAnswer(v, allowDecimal) };
   }
 
   if (operation === "mul") {
     const count = Math.max(2, opCount);
-    const parts = Array.from({ length: count }, () => randomInt(2, 12));
+    const high = getOperandRange(max, ops, "mul");
+    const parts = Array.from({ length: count }, () => randomInt(2, high));
     const v = parts.reduce((prod, value) => prod * value, 1);
-    return { question: parts.join(" × "), answer: normalizeAnswer(v, allowDecimal) };
+    const sign = Math.random() < 0.5 ? "+" : "−";
+    const addA = randomInt(1, getOperandRange(max, ops, "add"));
+    const addB = randomInt(1, getOperandRange(max, ops, "add"));
+    const addValue = sign === "+" ? addA + addB : addA - addB;
+    const withAdd =
+      count >= 4
+        ? `(${addA} ${sign} ${addB}) × ${parts[0]} × ${parts[1]}`
+        : `(${addA} ${sign} ${addB}) × ${parts[0]}`;
+    const expr =
+      count >= 4
+        ? withAdd
+        : count >= 3
+          ? withAdd
+          : parts.join(" × ");
+    const finalValue =
+      count >= 4 ? addValue * parts[0] * parts[1] : addValue * parts[0];
+    return { question: expr, answer: normalizeAnswer(finalValue, allowDecimal) };
   }
 
   if (operation === "div") {
     const count = Math.max(2, opCount);
-    const divisor = randomInt(2, 12);
-    const q = randomInt(2, Math.floor(cap / divisor));
+    const high = getOperandRange(max, ops, "div");
+    const divisor = randomInt(2, high);
+    const q = randomInt(2, Math.floor(Math.min(cap, max) / divisor));
     const a = q * divisor;
-    const rest = Array.from({ length: count - 1 }, () => randomInt(2, 12));
+    const rest = Array.from({ length: count - 1 }, () => randomInt(2, high));
     const expr = [a, divisor, ...rest].join(" / ");
     const v = rest.reduce((acc, value) => acc / value, a / divisor);
-    return { question: expr, answer: normalizeAnswer(v, true) };
+    const sign = Math.random() < 0.5 ? "+" : "−";
+    const addA = randomInt(1, getOperandRange(max, ops, "add"));
+    const addB = randomInt(1, getOperandRange(max, ops, "add"));
+    const addValue = sign === "+" ? addA + addB : addA - addB;
+    const baseDiv = a / divisor;
+    const withAdd =
+      count >= 4
+        ? `(${addA} ${sign} ${addB}) / ${divisor} / ${rest[0]}`
+        : `(${addA} ${sign} ${addB}) / ${divisor}`;
+    const grouped =
+      count >= 4
+        ? withAdd
+        : count >= 3
+          ? withAdd
+          : expr;
+    const finalValue =
+      count >= 4 ? addValue / divisor / rest[0] : addValue / divisor;
+    return { question: grouped, answer: normalizeAnswer(finalValue, true) };
   }
 
   if (ops === 1) {
